@@ -7,5 +7,10 @@
         public string CorrectAnswer { get; set; }
         public string Difficulty { get; set; }
 
+        public bool CheckAnswer(string userAnswer)
+        {
+            return string.Equals(userAnswer.Trim(), CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+        public string GetCorrectAnswer() { return CorrectAnswer; }
     }
 }
