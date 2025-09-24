@@ -2,7 +2,7 @@
 {
     public enum UserRole
     {
-        Student,
+        User,
         Admin
     }
     public class User
