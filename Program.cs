@@ -1,6 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using Oganesyan_WebAPI.Data;
+
 var builder = WebApplication.CreateBuilder(args);
-//builder.Services.AddDbContext<MvcMovieContext>(options =>
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("MvcMovieContext") ?? throw new InvalidOperationException("Connection string 'MvcMovieContext' not found.")));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("AppDbContext") ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
 
 // Add services to the container.
 
