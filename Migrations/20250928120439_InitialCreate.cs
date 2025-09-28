@@ -12,6 +12,21 @@ namespace Oganesyan_WebAPI.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Exercises",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Title = table.Column<string>(type: "TEXT", nullable: false),
+                    Difficulty = table.Column<string>(type: "TEXT", nullable: false),
+                    CorrectAnswer = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Exercises", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Meta",
                 columns: table => new
                 {
@@ -23,21 +38,6 @@ namespace Oganesyan_WebAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Meta", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tasks",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
-                    Difficulty = table.Column<string>(type: "TEXT", nullable: false),
-                    CorrectAnswer = table.Column<string>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tasks", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -62,7 +62,7 @@ namespace Oganesyan_WebAPI.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TaskId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ExerciseId = table.Column<int>(type: "INTEGER", nullable: false),
                     UserSQL = table.Column<string>(type: "TEXT", nullable: false),
                     UserAnswer = table.Column<string>(type: "TEXT", nullable: false),
                     IsCorrect = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -72,17 +72,17 @@ namespace Oganesyan_WebAPI.Migrations
                 {
                     table.PrimaryKey("PK_Solutions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Solutions_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_Solutions_Exercises_ExerciseId",
+                        column: x => x.ExerciseId,
+                        principalTable: "Exercises",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Solutions_TaskId",
+                name: "IX_Solutions_ExerciseId",
                 table: "Solutions",
-                column: "TaskId");
+                column: "ExerciseId");
         }
 
         /// <inheritdoc />
@@ -98,7 +98,7 @@ namespace Oganesyan_WebAPI.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Tasks");
+                name: "Exercises");
         }
     }
 }

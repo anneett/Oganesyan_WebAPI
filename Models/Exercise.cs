@@ -1,6 +1,6 @@
 ﻿namespace Oganesyan_WebAPI.Models
 {
-    public class Task
+    public class Exercise
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -11,5 +11,12 @@
         {
             return string.Equals(userAnswer.Trim(), CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
         }
+
+        public string ShowAnswer()
+        {
+            return CorrectAnswer;
+        }
+
+        // сохранить ответ/засчитать правильный ответ/сохранить неправильный ответ??? работа с классом solutions
     }
 }

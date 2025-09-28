@@ -39,40 +39,7 @@ namespace Oganesyan_WebAPI.Migrations
                     b.ToTable("Meta");
                 });
 
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.Solution", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserAnswer")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserSQL")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("Solutions");
-                });
-
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.Task", b =>
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.Exercise", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -92,7 +59,40 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Exercises");
+                });
+
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.Solution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAnswer")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserSQL")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.ToTable("Solutions");
                 });
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.User", b =>
@@ -119,13 +119,13 @@ namespace Oganesyan_WebAPI.Migrations
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Solution", b =>
                 {
-                    b.HasOne("Oganesyan_WebAPI.Models.Task", "Task")
+                    b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
                         .WithMany()
-                        .HasForeignKey("TaskId")
+                        .HasForeignKey("ExerciseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Task");
+                    b.Navigation("Exercise");
                 });
 #pragma warning restore 612, 618
         }
