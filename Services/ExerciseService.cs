@@ -11,10 +11,15 @@ namespace Oganesyan_WebAPI.Services
             _context = context;
         }
 
-        public async Task AddExercise(Exercise exercise)
+        public async Task<Exercise?> GetExerciseById(int id)
+        {
+            return await _context.Exercises.FindAsync(id);
+        }
+        public async Task/*<Exercise>*/ AddExercise(Exercise exercise)
         {
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
+            //return exercise;
         }
         public async Task UpdateExercise(Exercise exercise)
         {
@@ -31,6 +36,5 @@ namespace Oganesyan_WebAPI.Services
                 await _context.SaveChangesAsync();
             }
         }
-        // добавить задание в базу данных, удалить задание из базы данных, поменять что-либо
     }
 }

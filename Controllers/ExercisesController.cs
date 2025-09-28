@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
+using Oganesyan_WebAPI.Services;
 
 namespace Oganesyan_WebAPI.Controllers
 {
@@ -14,95 +15,113 @@ namespace Oganesyan_WebAPI.Controllers
     [ApiController]
     public class ExercisesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ExerciseService _exerciseService;
 
-        public ExercisesController(AppDbContext context)
+        public ExercisesController(ExerciseService exerciseService)
         {
-            _context = context;
+            _exerciseService = exerciseService;
         }
 
-        // GET: api/Exercises
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
+        [HttpPost]
+        public async Task<ActionResult<Exercise>> AddExersice(Exercise exercise)
         {
-            return await _context.Exercises.ToListAsync();
+            await _exerciseService.AddExercise(exercise);
+            return CreatedAtAction(nameof(GetExercise), new { id = exercise.Id }, exercise);
         }
 
-        // GET: api/Exercises/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Exercise>> GetExercise(int id)
         {
-            var exercise = await _context.Exercises.FindAsync(id);
-
+            var exercise = await _exerciseService.GetExerciseById(id);
             if (exercise == null)
             {
                 return NotFound();
             }
-
             return exercise;
         }
 
-        // PUT: api/Exercises/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutExercise(int id, Exercise exercise)
-        {
-            if (id != exercise.Id)
-            {
-                return BadRequest();
-            }
+        //// GET: api/Exercises
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
+        //{
+        //    return await _context.Exercises.ToListAsync();
+        //}
 
-            _context.Entry(exercise).State = EntityState.Modified;
+        //// GET: api/Exercises/5
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<Exercise>> GetExercise(int id)
+        //{
+        //    var exercise = await _context.Exercises.FindAsync(id);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ExerciseExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    if (exercise == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return NoContent();
-        }
+        //    return exercise;
+        //}
 
-        // POST: api/Exercises
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Exercise>> PostExercise(Exercise exercise)
-        {
-            _context.Exercises.Add(exercise);
-            await _context.SaveChangesAsync();
+        //// PUT: api/Exercises/5
+        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutExercise(int id, Exercise exercise)
+        //{
+        //    if (id != exercise.Id)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            return CreatedAtAction("GetExercise", new { id = exercise.Id }, exercise);
-        }
+        //    _context.Entry(exercise).State = EntityState.Modified;
 
-        // DELETE: api/Exercises/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteExercise(int id)
-        {
-            var exercise = await _context.Exercises.FindAsync(id);
-            if (exercise == null)
-            {
-                return NotFound();
-            }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!ExerciseExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            _context.Exercises.Remove(exercise);
-            await _context.SaveChangesAsync();
+        //    return NoContent();
+        //}
 
-            return NoContent();
-        }
+        //// POST: api/Exercises
+        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        //[HttpPost]
+        //public async Task<ActionResult<Exercise>> PostExercise(Exercise exercise)
+        //{
+        //    _context.Exercises.Add(exercise);
+        //    await _context.SaveChangesAsync();
 
-        private bool ExerciseExists(int id)
-        {
-            return _context.Exercises.Any(e => e.Id == id);
-        }
+        //    return CreatedAtAction("GetExercise", new { id = exercise.Id }, exercise);
+        //}
+
+        //// DELETE: api/Exercises/5
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteExercise(int id)
+        //{
+        //    var exercise = await _context.Exercises.FindAsync(id);
+        //    if (exercise == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    _context.Exercises.Remove(exercise);
+        //    await _context.SaveChangesAsync();
+
+        //    return NoContent();
+        //}
+
+        //private bool ExerciseExists(int id)
+        //{
+        //    return _context.Exercises.Any(e => e.Id == id);
+        //}
     }
 }
