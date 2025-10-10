@@ -18,11 +18,6 @@ namespace Oganesyan_WebAPI.Models
         [EnumDataType(typeof(UserRole))]
         public UserRole Role { get; set; }
 
-        public bool IsAdmin()
-        {
-            return Role == UserRole.Admin;
-        }
-
         // Авторизация: свериться, есть ли такой логин в бд, потом проверка пароля
 
         // +-: просмотр профиля/просмотреть статистику

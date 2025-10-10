@@ -41,6 +41,7 @@ namespace Oganesyan_WebAPI.Services
         //    await _context.SaveChangesAsync();
         //    return exercise;
         //}
+        
         //public async Task<bool> DeleteExercise(int id)
         //{
         //    var exercise = await _context.Exercises.FindAsync(id);

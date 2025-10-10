@@ -22,9 +22,9 @@ namespace Oganesyan_WebAPI.Controllers
             _userService = userService;
         }
 
-        // GET: api/Users/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        // GET: api/Users/get-user-by-id/{id}
+        [HttpGet("get-user-by-id/{id}")]
+        public async Task<ActionResult<User>> GetUserById(int id)
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
@@ -35,16 +35,16 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(user);
         }
 
-        // POST: api/Users
-        [HttpPost]
+        // POST: api/Users/add-user
+        [HttpPost("add-user")]
         public async Task<ActionResult<User>> AddUser(string login, string password, UserRole userRole)
         {
             var user = await _userService.AddUser(login, password, userRole);
-            return Ok();
+            return Ok(user);
         }
 
-        // PUT: api/Users/{id}
-        [HttpPut("{id}")]
+        // PUT: api/Users/update-user/{id}
+        [HttpPut("update-user/{id}")]
         public async Task<IActionResult> UpdateUser(int id, User user)
         {
             if (id != user.Id)
@@ -63,8 +63,8 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // PUT: api/Users/{id}/make-admin
-        [HttpPut("{id}/make-admin")]
+        // PUT: api/Users/make-admin/{id}/make-admin
+        [HttpPut("make-admin/{id}/make-admin")]
         public async Task<IActionResult> MakeUserAdmin(int id)
         {
             var user = await _userService.GetUserById(id);
@@ -77,8 +77,8 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // PUT: api/Users/{id}/unmake-admin
-        [HttpPut("{id}/unmake-admin")]
+        // PUT: api/Users/unmake-admin/{id}/unmake-admin
+        [HttpPut("unmake-admin/{id}/unmake-admin")]
         public async Task<IActionResult> UnmakeUserAdmin(int id)
         {
             var user = await _userService.GetUserById(id);
@@ -91,22 +91,8 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // GET: api/Users/{id}/is-admin
-        [HttpGet("{id}/is-admin")]
-        public async Task<IActionResult> IsAdmin(int id)
-        {
-            var user = _userService.GetUserById(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            await _userService.IsAdmin(id);
-
-            return Ok();
-        }
-
-        // DELETE: api/Users/{id}
-        [HttpDelete("{id}")]
+        // DELETE: api/Users/delete-user/{id}
+        [HttpDelete("delete-user/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _userService.GetUserById(id);
@@ -120,16 +106,11 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // GET: api/Users
-        [HttpGet]
+        // GET: api/Users/get-users
+        [HttpGet("get-users")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _userService.GetUsers();
         }
-        
-        //private bool UserExists(int id)
-        //{
-        //    return _context.Users.Any(e => e.Id == id);
-        //}
     }
 }

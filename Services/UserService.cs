@@ -57,18 +57,6 @@ namespace Oganesyan_WebAPI.Services
             }
             return false;
         }
-        public async Task<bool> IsAdmin(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                if (user.Role == UserRole.Admin)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
         public async Task<bool> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);

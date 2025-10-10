@@ -23,7 +23,7 @@ namespace Oganesyan_WebAPI.Models
             return string.Equals(userAnswer.Trim(), CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
-
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public string ShowAnswer()
         {

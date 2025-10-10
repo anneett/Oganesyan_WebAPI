@@ -17,7 +17,7 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Solutions.FindAsync(id);
         }
-        public async Task<bool> AddSolution(int userId, string userAnswer, Exercise exercise)
+        public async Task<Models.Solution?> AddSolution(int userId, string userAnswer, Exercise exercise)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
@@ -33,9 +33,9 @@ namespace Oganesyan_WebAPI.Services
                 _context.Solutions.Add(solution);
                 await _context.SaveChangesAsync();
 
-                return true;
+                return solution;
             }
-            return false;
+            return null;
         }
     }
 }

@@ -16,8 +16,8 @@ namespace Oganesyan_WebAPI.Controllers
             _solutionService = solutionService;
         }
 
-        // GET: api/Solutions/{id}
-        [HttpGet("{id}")]
+        // GET: api/Solutions/get-solution/{id}
+        [HttpGet("get-solution/{id}")]
         public async Task<ActionResult<Solution>> GetSolution(int id)
         {
             var solution = await _solutionService.GetSolutionById(id);
@@ -29,8 +29,8 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(solution);
         }
 
-        // POST: api/Solutions
-        [HttpPost]
+        // POST: api/Solutions/add-solution
+        [HttpPost("add-solution")]
         public async Task<ActionResult<Solution>> AddSolution(int userId, string userAnswer, Exercise exercise)
         {
             var solution = await _solutionService.AddSolution(userId, userAnswer, exercise);

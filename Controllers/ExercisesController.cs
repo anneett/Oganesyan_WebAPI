@@ -22,8 +22,8 @@ namespace Oganesyan_WebAPI.Controllers
             _exerciseService = exerciseService;
         }
 
-        // GET: api/Exercises/{id}
-        [HttpGet("{id}")]
+        // GET: api/Exercises/get-exercise/{id}
+        [HttpGet("get-exercise/{id}")]
         public async Task<ActionResult<Exercise>> GetExercise(int id)
         {
             var exercise = await _exerciseService.GetExerciseById(id);
@@ -35,16 +35,16 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(exercise);
         }
 
-        // POST: api/Exercises
-        [HttpPost]
+        // POST: api/Exercises/add-exercise
+        [HttpPost("add-exercise")]
         public async Task<ActionResult<Exercise>> AddExersice(string title, ExerciseDifficulty difficulty, string correctAnswer)
         {
             var exercise = await _exerciseService.AddExercise(title, difficulty, correctAnswer);
             return Ok(exercise);
         }
 
-        // GET: api/Exercises
-        [HttpGet]
+        // GET: api/Exercises/get-exercise
+        [HttpGet("get-exercise")]
         public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
         {
             return await _exerciseService.GetExercises();
@@ -67,7 +67,7 @@ namespace Oganesyan_WebAPI.Controllers
         //    {
         //        return NotFound();
         //    }
-
+        //
         //    return NoContent();
         //}
 
@@ -82,12 +82,6 @@ namespace Oganesyan_WebAPI.Controllers
         //    }
         //    await _exerciseService.DeleteExercise(id);
         //    return NoContent();
-        //}
-
-        //
-        //private bool ExerciseExists(int id)
-        //{
-        //    return _context.Exercises.Any(e => e.Id == id);
         //}
     }
 }
