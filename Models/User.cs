@@ -1,17 +1,21 @@
 ﻿using Microsoft.AspNetCore.Identity.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace Oganesyan_WebAPI.Models
 {
     public enum UserRole
     {
-        User,
-        Admin
+        Admin,
+        User
     }
     public class User
     {
         public int Id { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
+
+        [Required]
+        [EnumDataType(typeof(UserRole))]
         public UserRole Role { get; set; }
 
         public bool IsAdmin()
@@ -19,13 +23,7 @@ namespace Oganesyan_WebAPI.Models
             return Role == UserRole.Admin;
         }
 
-
-
         // Авторизация: свериться, есть ли такой логин в бд, потом проверка пароля
-
-        // Регистрация: добавление в бд пользователя
-
-        // Сделать пользователя админом
 
         // +-: просмотр профиля/просмотреть статистику
 
@@ -36,6 +34,7 @@ namespace Oganesyan_WebAPI.Models
         //    {
         //        return true;
         //    }
+        //    return false;
         //}
 
         //Statistics
