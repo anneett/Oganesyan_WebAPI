@@ -8,7 +8,7 @@
         public Exercise Exercise { get; set; }
 
         // public string UserSQL { get; set; }
-        public string UserAnswer { get; set; }
+        public string UserAnswer { get; set; } = string.Empty;
         public bool IsCorrect { get; set; }
 
         public DateTime SubmittedAt { get; set; }

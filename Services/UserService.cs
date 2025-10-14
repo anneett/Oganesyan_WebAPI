@@ -16,13 +16,13 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Users.FindAsync(id);
         }
-        public async Task<User> AddUser(string login, string password, UserRole userRole)
+        public async Task<User> AddUser(string login, string password, bool isAdmin)
         {
             var user = new User
             {
                 Login = login,
                 Password = password,
-                Role = userRole
+                IsAdmin = isAdmin
             };
 
             _context.Users.Add(user);
@@ -40,7 +40,7 @@ namespace Oganesyan_WebAPI.Services
             var user = await _context.Users.FindAsync(id);
             if (user != null)
             {
-                user.Role = UserRole.Admin;
+                user.IsAdmin = true;
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -51,7 +51,7 @@ namespace Oganesyan_WebAPI.Services
             var user = await _context.Users.FindAsync(id);
             if (user != null)
             {
-                user.Role = UserRole.User;
+                user.IsAdmin = false;
                 await _context.SaveChangesAsync();
                 return true;
             }

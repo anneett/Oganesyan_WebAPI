@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
@@ -22,7 +23,7 @@ namespace Oganesyan_WebAPI.Controllers
             _userService = userService;
         }
 
-        // GET: api/Users/get-user-by-id/{id}
+        [Authorize(Roles = "admin")]
         [HttpGet("get-user-by-id/{id}")]
         public async Task<ActionResult<User>> GetUserById(int id)
         {
@@ -35,15 +36,15 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(user);
         }
 
-        // POST: api/Users/add-user
+        [Authorize(Roles = "admin")]
         [HttpPost("add-user")]
-        public async Task<ActionResult<User>> AddUser(string login, string password, UserRole userRole)
+        public async Task<ActionResult<User>> AddUser(string login, string password, bool isAdmin)
         {
-            var user = await _userService.AddUser(login, password, userRole);
-            return Ok(user);
+            var user = await _userService.AddUser(login, password, isAdmin);
+            return CreatedAtAction("GetUserById", new { id = user.Id }, user);
         }
 
-        // PUT: api/Users/update-user/{id}
+        [Authorize(Roles = "admin")]
         [HttpPut("update-user/{id}")]
         public async Task<IActionResult> UpdateUser(int id, User user)
         {
@@ -63,7 +64,7 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // PUT: api/Users/make-admin/{id}/make-admin
+        [Authorize(Roles = "admin")]
         [HttpPut("make-admin/{id}/make-admin")]
         public async Task<IActionResult> MakeUserAdmin(int id)
         {
@@ -77,7 +78,7 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // PUT: api/Users/unmake-admin/{id}/unmake-admin
+        [Authorize(Roles = "admin")]
         [HttpPut("unmake-admin/{id}/unmake-admin")]
         public async Task<IActionResult> UnmakeUserAdmin(int id)
         {
@@ -91,7 +92,7 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Users/delete-user/{id}
+        [Authorize(Roles = "admin")]
         [HttpDelete("delete-user/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -106,7 +107,7 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        // GET: api/Users/get-users
+        [Authorize(Roles = "admin")]
         [HttpGet("get-users")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {

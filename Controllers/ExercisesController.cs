@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,7 @@ namespace Oganesyan_WebAPI.Controllers
             _exerciseService = exerciseService;
         }
 
-        // GET: api/Exercises/get-exercise/{id}
+        [Authorize]
         [HttpGet("get-exercise/{id}")]
         public async Task<ActionResult<Exercise>> GetExercise(int id)
         {
@@ -35,16 +36,16 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(exercise);
         }
 
-        // POST: api/Exercises/add-exercise
+        [Authorize(Roles = "admin")]
         [HttpPost("add-exercise")]
         public async Task<ActionResult<Exercise>> AddExersice(string title, ExerciseDifficulty difficulty, string correctAnswer)
         {
             var exercise = await _exerciseService.AddExercise(title, difficulty, correctAnswer);
-            return Ok(exercise);
+            return CreatedAtAction("GetExerciseById", new { id = exercise.Id }, exercise);
         }
 
-        // GET: api/Exercises/get-exercise
-        [HttpGet("get-exercise")]
+        [Authorize]
+        [HttpGet("get-exercises")]
         public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
         {
             return await _exerciseService.GetExercises();

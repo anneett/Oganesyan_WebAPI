@@ -5,10 +5,10 @@ namespace Oganesyan_WebAPI.Models
 {
     public class AuthOptions
     {
-        public const string ISSUER = "MyAuthServer";
-        public const string AUDIENCE = "MyAuthClient";
-        const string KEY = "mysupersecret_secretsecretsecretkey!123";
-        public static SymmetricSecurityKey GetSymmetricSecurityKey() =>
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(KEY));
+        public string Issuer { get; set; } = string.Empty;
+        public string Audience { get; set; } = string.Empty;
+        public string Key { get; set; } = string.Empty;
+        public SymmetricSecurityKey GetSymmetricSecurityKey() =>
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Key));
     }
 }
