@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
+using System.Security.Claims;
 
 namespace Oganesyan_WebAPI.Controllers
 {
@@ -30,12 +32,22 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(solution);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize]
         [HttpPost("add-solution")]
-        public async Task<ActionResult<Solution>> AddSolution(int userId, string userAnswer, Exercise exercise)
+        public async Task<ActionResult<Solution>> AddSolution(SolutionCreateDto solutionCreateDto)
         {
-            var solution = await _solutionService.AddSolution(userId, userAnswer, exercise);
-            return CreatedAtAction("GetSolutionById", new { id = solution.Id }, solution);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
+            {
+                return Unauthorized();
+            }
+
+            var solution = await _solutionService.AddSolution(solutionCreateDto, userId);
+            if (solution == null) {
+                return BadRequest();
+            }
+
+            return CreatedAtAction(nameof(GetSolutionById), new { id = solution.Id }, solution);
         }
     }
 }

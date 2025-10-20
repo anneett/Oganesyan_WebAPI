@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
+using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
 
@@ -25,7 +26,7 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize]
         [HttpGet("get-exercise/{id}")]
-        public async Task<ActionResult<Exercise>> GetExercise(int id)
+        public async Task<ActionResult<Exercise>> GetExerciseById(int id)
         {
             var exercise = await _exerciseService.GetExerciseById(id);
             if (exercise == null)
@@ -38,10 +39,10 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpPost("add-exercise")]
-        public async Task<ActionResult<Exercise>> AddExersice(string title, ExerciseDifficulty difficulty, string correctAnswer)
+        public async Task<ActionResult<Exercise>> AddExersice([FromBody] ExerciseCreateDto exerciseCreateDto)
         {
-            var exercise = await _exerciseService.AddExercise(title, difficulty, correctAnswer);
-            return CreatedAtAction("GetExerciseById", new { id = exercise.Id }, exercise);
+            var exercise = await _exerciseService.AddExercise(exerciseCreateDto);
+            return CreatedAtAction(nameof(GetExerciseById), new { id = exercise.Id }, exercise);
         }
 
         [Authorize]
@@ -50,39 +51,5 @@ namespace Oganesyan_WebAPI.Controllers
         {
             return await _exerciseService.GetExercises();
         }
-
-        //// PUT: api/Exercises/{id}
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> UpdateExercise(int id, Exercise exercise)
-        //{
-        //    if (id != exercise.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-        //    try
-        //    {
-        //        //exercise.Id = id;
-        //        await _exerciseService.UpdateExercise(exercise);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return NotFound();
-        //    }
-        //
-        //    return NoContent();
-        //}
-
-        //// DELETE: api/Exercises/{id}
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteExercise(int id)
-        //{
-        //    var exercise = await _exerciseService.GetExerciseById(id);
-        //    if (exercise == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    await _exerciseService.DeleteExercise(id);
-        //    return NoContent();
-        //}
     }
 }

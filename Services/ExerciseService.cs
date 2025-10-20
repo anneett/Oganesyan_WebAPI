@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
+using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using System.Collections.Specialized;
 
@@ -17,13 +18,13 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Exercises.FindAsync(id);
         }
-        public async Task<Exercise> AddExercise(string title, ExerciseDifficulty difficulty, string correctAnswer)
+        public async Task<Exercise> AddExercise(ExerciseCreateDto exerciseCreateDto)
         {
             var exercise = new Exercise
             {
-                Title = title,
-                Difficulty = difficulty,
-                CorrectAnswer = correctAnswer
+                Title = exerciseCreateDto.Title,
+                Difficulty = exerciseCreateDto.Difficulty,
+                CorrectAnswer = exerciseCreateDto.CorrectAnswer
             };
 
             _context.Exercises.Add(exercise);
@@ -34,23 +35,5 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Exercises.ToListAsync();
         }
-
-        //public async Task<Exercise> UpdateExercise(Exercise exercise)
-        //{
-        //    _context.Exercises.Update(exercise);
-        //    await _context.SaveChangesAsync();
-        //    return exercise;
-        //}
-        
-        //public async Task<bool> DeleteExercise(int id)
-        //{
-        //    var exercise = await _context.Exercises.FindAsync(id);
-        //    if (exercise != null)
-        //    {
-        //        _context.Exercises.Remove(exercise);
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    return true;
-        //}
     }
 }

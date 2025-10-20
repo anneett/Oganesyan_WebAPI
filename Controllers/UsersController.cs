@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
+using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
 using System;
@@ -38,23 +39,19 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpPost("add-user")]
-        public async Task<ActionResult<User>> AddUser(string login, string password, bool isAdmin)
+        public async Task<ActionResult<User>> AddUser(UserCreateDto userCreateDto)
         {
-            var user = await _userService.AddUser(login, password, isAdmin);
-            return CreatedAtAction("GetUserById", new { id = user.Id }, user);
+            var user = await _userService.AddUser(userCreateDto);
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
         }
 
         [Authorize(Roles = "admin")]
         [HttpPut("update-user/{id}")]
-        public async Task<IActionResult> UpdateUser(int id, User user)
+        public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
-            if (id != user.Id)
-            {
-                return BadRequest();
-            }
             try
             {
-                await _userService.UpdateUser(user);
+                await _userService.UpdateUser(id, userUpdateDto);
             }
             catch (Exception)
             {

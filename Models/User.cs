@@ -9,7 +9,9 @@ namespace Oganesyan_WebAPI.Models
     public class User
     {
         public int Id { get; set; }
+        public string UserName { get; set; }
         public string Login { get; set; } = string.Empty;
+
         private byte[] password;
         public string Password
         {
@@ -23,6 +25,7 @@ namespace Oganesyan_WebAPI.Models
             set { password = Encoding.UTF8.GetBytes(value); }
         }
         public bool IsAdmin { get; set; } = false;
+
         public bool CheckPassword(string rawPassword)
         {
             using var md5 = MD5.Create();

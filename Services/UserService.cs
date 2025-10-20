@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
+using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 
 namespace Oganesyan_WebAPI.Services
@@ -16,24 +17,32 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Users.FindAsync(id);
         }
-        public async Task<User> AddUser(string login, string password, bool isAdmin)
+        public async Task<User> AddUser(UserCreateDto userCreateDto)
         {
             var user = new User
             {
-                Login = login,
-                Password = password,
-                IsAdmin = isAdmin
+                Login = userCreateDto.Login,
+                Password = userCreateDto.Password,
+                IsAdmin = userCreateDto.IsAdmin
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
         }
-        public async Task<bool> UpdateUser(User user)
+        public async Task<bool> UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
-            return true;
+            var user = await _context.Users.FindAsync(id);
+            if (user != null)
+            {
+                user.UserName = userUpdateDto.UserName;
+                user.Login = userUpdateDto.Login;
+                user.Password = userUpdateDto.Password;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
         }
         public async Task<bool> MakeAdmin(int id)
         {
