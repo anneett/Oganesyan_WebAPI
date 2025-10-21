@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
@@ -39,6 +40,10 @@ namespace Oganesyan_WebAPI.Services
             await _context.SaveChangesAsync();
 
             return solution;
+        }
+        public async Task<List<Models.Solution>> GetSolutions()
+        {
+            return await _context.Solutions.ToListAsync();
         }
     }
 }

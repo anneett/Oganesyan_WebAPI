@@ -14,6 +14,7 @@ namespace Oganesyan_WebAPI.Services
         {
             _jwtSettings = jwtSettings;
         }
+
         public object GenerateToken(User user)
         {
             var now = DateTime.UtcNow;
@@ -26,7 +27,7 @@ namespace Oganesyan_WebAPI.Services
 
             var jwt = new JwtSecurityToken(
                     issuer: _jwtSettings.Issuer,
-                    audience: _jwtSettings.Issuer,
+                    audience: _jwtSettings.Audience,
                     notBefore: now,
                     expires: now.AddMinutes(30),
                     claims: claims,

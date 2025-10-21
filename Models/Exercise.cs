@@ -22,7 +22,5 @@ namespace Oganesyan_WebAPI.Models
         {
             return string.Equals(userAnswer.Trim(), CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
         }
-
-        // сохранить ответ/засчитать правильный ответ/сохранить неправильный ответ??? работа с классом solutions
     }
 }

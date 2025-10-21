@@ -22,11 +22,11 @@ namespace Oganesyan_WebAPI.Controllers
             public string Login { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
         }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginData ld)
         {
-            var users = await _userService.GetUsers();
-            var user = users.FirstOrDefault(u => u.Login == ld.Login);
+            var user = await _userService.GetUserByLogin(ld.Login);
 
             if (user == null || !user.CheckPassword(ld.Password))
             {

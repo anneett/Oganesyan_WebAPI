@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using Oganesyan_WebAPI.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Oganesyan_WebAPI.Controllers
@@ -26,28 +28,49 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpGet("get-user-by-id/{id}")]
-        public async Task<ActionResult<User>> GetUserById(int id)
+        public async Task<ActionResult<UserDto>> GetUserById(int id)
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
             {
                 return NotFound();
             }
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Login = user.Login,
+                UserName = user.UserName,
+                IsAdmin = user.IsAdmin
+            };
 
-            return Ok(user);
+            return Ok(userDto);
         }
 
-        [Authorize(Roles = "admin")]
         [HttpPost("add-user")]
-        public async Task<ActionResult<User>> AddUser(UserCreateDto userCreateDto)
+        public async Task<ActionResult<UserDto>> AddUser([FromBody] UserCreateDto userCreateDto)
         {
-            var user = await _userService.AddUser(userCreateDto);
-            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+            try
+            {
+                var user = await _userService.AddUser(userCreateDto);
+                var result = new UserDto
+                {
+                    Id = user.Id,
+                    Login = user.Login,
+                    UserName = user.UserName,
+                    IsAdmin = user.IsAdmin
+                };
+
+                return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [Authorize(Roles = "admin")]
         [HttpPut("update-user/{id}")]
-        public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userUpdateDto)
+        public async Task<IActionResult> UpdateUserById(int id, [FromBody] UserUpdateDto userUpdateDto)
         {
             try
             {
@@ -60,6 +83,27 @@ namespace Oganesyan_WebAPI.Controllers
 
             return NoContent();
         }
+
+        //[Authorize]
+        //[HttpPut("update-user-self}")]
+        //public async Task<IActionResult> UpdateUserSelf(UserCreateDto userUpdateDto)
+        //{
+        //    //var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //    //if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
+        //    //{
+        //    //    return Unauthorized();
+        //    //}
+        //    try
+        //    {
+        //        await _userService.UpdateUser(userUpdateDto);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return NoContent();
+        //}
 
         [Authorize(Roles = "admin")]
         [HttpPut("make-admin/{id}/make-admin")]
@@ -91,7 +135,7 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpDelete("delete-user/{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUserById(int id)
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
@@ -104,11 +148,28 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
+        //[Authorize]
+        //[HttpDelete("delete-user-self")]
+        //public async Task<IActionResult> DeleteUserSelf(int id)
+        //{
+        //    var user = await _userService.GetUserById(id);
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    await _userService.DeleteUser(id);
+
+        //    return NoContent();
+        //}
+
         [Authorize(Roles = "admin")]
         [HttpGet("get-users")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
-            return await _userService.GetUsers();
+            var users = await _userService.GetUsers();
+            var result = users.Select(u => new UserDto { Id = u.Id, Login = u.Login, UserName = u.UserName, IsAdmin = u.IsAdmin }).ToList();
+            return Ok(result);
         }
     }
 }

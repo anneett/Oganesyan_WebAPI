@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Humanizer;
+using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
@@ -17,14 +18,22 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Users.FindAsync(id);
         }
+        public async Task<User?> GetUserByLogin(string login)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Login == login);
+        }
         public async Task<User> AddUser(UserCreateDto userCreateDto)
         {
+            var existing = await GetUserByLogin(userCreateDto.Login);
+            if (existing != null) throw new InvalidOperationException("Login already exists");
+
             var user = new User
             {
-                Login = userCreateDto.Login,
-                Password = userCreateDto.Password,
-                IsAdmin = userCreateDto.IsAdmin
+                UserName = userCreateDto.UserName,
+                Login = userCreateDto.Login
             };
+
+            user.SetPassword(userCreateDto.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -33,11 +42,14 @@ namespace Oganesyan_WebAPI.Services
         public async Task<bool> UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
             var user = await _context.Users.FindAsync(id);
+
             if (user != null)
             {
-                user.UserName = userUpdateDto.UserName;
-                user.Login = userUpdateDto.Login;
-                user.Password = userUpdateDto.Password;
+                if (!string.IsNullOrWhiteSpace(userUpdateDto.UserName))
+                    user.UserName = userUpdateDto.UserName;
+
+                if (!string.IsNullOrWhiteSpace(userUpdateDto.Password))
+                    user.SetPassword(userUpdateDto.Password);
 
                 await _context.SaveChangesAsync();
                 return true;
@@ -69,11 +81,10 @@ namespace Oganesyan_WebAPI.Services
         public async Task<bool> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
-            }
+            if (user == null) return false;
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
             return true;
         }
         public async Task<List<User>> GetUsers()

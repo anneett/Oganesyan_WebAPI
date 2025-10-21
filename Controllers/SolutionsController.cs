@@ -19,6 +19,25 @@ namespace Oganesyan_WebAPI.Controllers
             _solutionService = solutionService;
         }
 
+        [Authorize]
+        [HttpPost("add-solution")]
+        public async Task<ActionResult<Solution>> AddSolution(SolutionCreateDto solutionCreateDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
+            {
+                return Unauthorized();
+            }
+
+            var solution = await _solutionService.AddSolution(solutionCreateDto, userId);
+            if (solution == null)
+            {
+                return BadRequest();
+            }
+
+            return CreatedAtAction(nameof(GetSolutionById), new { id = solution.Id }, solution);
+        }
+
         [Authorize(Roles = "admin")]
         [HttpGet("get-solution/{id}")]
         public async Task<ActionResult<Solution>> GetSolutionById(int id)
@@ -32,22 +51,11 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(solution);
         }
 
-        [Authorize]
-        [HttpPost("add-solution")]
-        public async Task<ActionResult<Solution>> AddSolution(SolutionCreateDto solutionCreateDto)
+        [Authorize(Roles = "admin")]
+        [HttpGet("get-exercises")]
+        public async Task<ActionResult<IEnumerable<Solution>>> GetSolutions()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
-            {
-                return Unauthorized();
-            }
-
-            var solution = await _solutionService.AddSolution(solutionCreateDto, userId);
-            if (solution == null) {
-                return BadRequest();
-            }
-
-            return CreatedAtAction(nameof(GetSolutionById), new { id = solution.Id }, solution);
+            return await _solutionService.GetSolutions();
         }
     }
 }
