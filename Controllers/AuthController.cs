@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
@@ -33,8 +34,27 @@ namespace Oganesyan_WebAPI.Controllers
                 return Unauthorized(new { message = "Wrong login/password." });
             }
 
-            var token = _authService.GenerateToken(user);
-            return Ok(token);
+            var accessToken = _authService.GenerateAccessToken(user);
+            var refreshToken = _authService.GenerateRefreshToken();
+
+            await _userService.SaveRefreshTokenAsync(user.Id, refreshToken);
+
+            return Ok(new { accessToken, refreshToken });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            var user = await _userService.GetByRefreshTokenAsync(request.RefreshToken);
+            if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+                return Unauthorized("Недействительный refresh токен");
+
+            var newAccessToken = _authService.GenerateAccessToken(user);
+            var newRefreshToken = _authService.GenerateRefreshToken();
+
+            await _userService.SaveRefreshTokenAsync(user.Id, newRefreshToken);
+
+            return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken });
         }
     }
 }

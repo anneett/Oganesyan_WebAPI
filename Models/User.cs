@@ -4,6 +4,7 @@ using Newtonsoft.Json.Schema;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Oganesyan_WebAPI.Models
 {
@@ -15,6 +16,12 @@ namespace Oganesyan_WebAPI.Models
         public string PasswordHash { get; private set; } = string.Empty;
         public string Salt { get; private set; } = string.Empty;
         public bool IsAdmin { get; set; } = false;
+
+        [JsonIgnore]
+        public string? RefreshToken { get; set; }
+
+        [JsonIgnore]
+        public DateTime? RefreshTokenExpiryTime { get; set; }
 
         public void SetPassword(string rawPassword)
         {

@@ -117,26 +117,22 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        //[Authorize]
-        //[HttpPut("update-user-self}")]
-        //public async Task<IActionResult> UpdateUserSelf(UserCreateDto userUpdateDto)
-        //{
-        //    //var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    //if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
-        //    //{
-        //    //    return Unauthorized();
-        //    //}
-        //    try
-        //    {
-        //        await _userService.UpdateUser(userUpdateDto);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return NotFound();
-        //    }
+        [Authorize]
+        [HttpPut("update-user-self")]
+        public async Task<IActionResult> UpdateUserSelf([FromBody] UserUpdateDto userUpdateDto)
+        {
+            int userId = _userService.GetUserId();
+            try
+            {
+                await _userService.UpdateUser(userId, userUpdateDto);
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
 
-        //    return NoContent();
-        //}
+            return NoContent();
+        }
 
         [Authorize(Roles = "admin")]
         [HttpPut("make-admin/{id}/make-admin")]
@@ -156,6 +152,12 @@ namespace Oganesyan_WebAPI.Controllers
         [HttpPut("unmake-admin/{id}/unmake-admin")]
         public async Task<IActionResult> UnmakeUserAdmin(int id)
         {
+            int userId = _userService.GetUserId();
+            if (userId == id)
+            {
+                return BadRequest("You cannot unadminister yourself.");
+            }
+
             var user = await _userService.GetUserById(id);
             if (user == null)
             {
@@ -181,19 +183,21 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        //[Authorize]
-        //[HttpDelete("delete-user-self")]
-        //public async Task<IActionResult> DeleteUserSelf(int id)
-        //{
-        //    var user = await _userService.GetUserById(id);
-        //    if (user == null)
-        //    {
-        //        return NotFound();
-        //    }
+        [Authorize]
+        [HttpDelete("delete-user-self")]
+        public async Task<IActionResult> DeleteUserSelf()
+        {
+            int userId = _userService.GetUserId();
+            try
+            {
+                await _userService.DeleteUser(userId);
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
 
-        //    await _userService.DeleteUser(id);
-
-        //    return NoContent();
-        //}
+            return NoContent();
+        }
     }
 }

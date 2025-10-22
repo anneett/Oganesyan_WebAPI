@@ -2,6 +2,7 @@
 using Oganesyan_WebAPI.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Oganesyan_WebAPI.Services
@@ -15,7 +16,7 @@ namespace Oganesyan_WebAPI.Services
             _jwtSettings = jwtSettings;
         }
 
-        public object GenerateToken(User user)
+        public object GenerateAccessToken(User user)
         {
             var now = DateTime.UtcNow;
             var claims = new List<Claim>
@@ -29,12 +30,19 @@ namespace Oganesyan_WebAPI.Services
                     issuer: _jwtSettings.Issuer,
                     audience: _jwtSettings.Audience,
                     notBefore: now,
-                    expires: now.AddMinutes(30),
+                    expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpireMinutes),
                     claims: claims,
                     signingCredentials: new SigningCredentials(_jwtSettings.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
             return new { token = encodedJwt };
+        }
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            return Convert.ToBase64String(randomBytes);
         }
     }
 }

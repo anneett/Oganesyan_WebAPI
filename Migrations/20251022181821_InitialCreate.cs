@@ -18,7 +18,7 @@ namespace Oganesyan_WebAPI.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
-                    Difficulty = table.Column<string>(type: "TEXT", nullable: false),
+                    Difficulty = table.Column<int>(type: "INTEGER", nullable: false),
                     CorrectAnswer = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -46,9 +46,13 @@ namespace Oganesyan_WebAPI.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    UserName = table.Column<string>(type: "TEXT", nullable: false),
                     Login = table.Column<string>(type: "TEXT", nullable: false),
-                    Password = table.Column<string>(type: "TEXT", nullable: false),
-                    Role = table.Column<int>(type: "INTEGER", nullable: false)
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
+                    Salt = table.Column<string>(type: "TEXT", nullable: false),
+                    IsAdmin = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RefreshToken = table.Column<string>(type: "TEXT", nullable: true),
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -63,7 +67,6 @@ namespace Oganesyan_WebAPI.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
                     ExerciseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    UserSQL = table.Column<string>(type: "TEXT", nullable: false),
                     UserAnswer = table.Column<string>(type: "TEXT", nullable: false),
                     IsCorrect = table.Column<bool>(type: "INTEGER", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false)

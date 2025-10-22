@@ -1,4 +1,5 @@
 ﻿using Humanizer;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
@@ -12,12 +13,25 @@ namespace Oganesyan_WebAPI.Services
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly SolutionService _solutionService;
+        private readonly AuthOptions _authOptions;
 
-        public UserService(AppDbContext context, IHttpContextAccessor httpContextAccessor, SolutionService solutionService)
+        public UserService(AppDbContext context, IHttpContextAccessor httpContextAccessor, SolutionService solutionService, AuthOptions authOptions)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _solutionService = solutionService;
+            _authOptions = authOptions;
+        }
+
+        public async Task SaveRefreshTokenAsync(int userId, string refreshToken)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user != null)
+            {
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(_authOptions.RefreshTokenExpireDays);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<User> AddUser(UserCreateDto userCreateDto)
@@ -31,13 +45,18 @@ namespace Oganesyan_WebAPI.Services
                 Login = userCreateDto.Login
             };
 
+            if (!_context.Users.Any())
+            {
+                user.IsAdmin = true;
+            }
+
             user.SetPassword(userCreateDto.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
         }
-        private int GetUserId()
+        public int GetUserId()
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return userIdClaim == null ? throw new UnauthorizedAccessException("Unauthorized user.") : int.Parse(userIdClaim);
@@ -54,10 +73,17 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Users.ToListAsync();
         }
+        public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        }
         public async Task<UserDto> GetProfile()
         {
             int userId = GetUserId();
             var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
 
             var userDto = new UserDto
             {
@@ -90,6 +116,7 @@ namespace Oganesyan_WebAPI.Services
             }
             return false;
         }
+
         public async Task<bool> MakeAdmin(int id)
         {
             var user = await _context.Users.FindAsync(id);
