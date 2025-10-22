@@ -52,10 +52,17 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("get-exercises")]
+        [HttpGet("get-solutions")]
         public async Task<ActionResult<IEnumerable<Solution>>> GetSolutions()
         {
             return await _solutionService.GetSolutions();
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("get-percent-all")]
+        public async Task<ActionResult<Dictionary<int, double>>> GetPercentCorrectForAll()
+        {
+            return await _solutionService.GetPercentCorrectForAll();
         }
     }
 }

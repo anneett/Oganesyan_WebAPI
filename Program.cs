@@ -12,6 +12,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("SQLiteConnection") ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<AuthOptions>();
+
+// Add services to the container.
+builder.Services.AddScoped<ExerciseService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<SolutionService>();
+builder.Services.AddScoped<AuthService>();
+
 builder.Services.AddSingleton(jwtSettings);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -28,12 +35,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
         };
     });
-
-// Add services to the container.
-builder.Services.AddScoped<ExerciseService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<SolutionService>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

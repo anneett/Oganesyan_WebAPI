@@ -26,26 +26,6 @@ namespace Oganesyan_WebAPI.Controllers
             _userService = userService;
         }
 
-        [Authorize(Roles = "admin")]
-        [HttpGet("get-user-by-id/{id}")]
-        public async Task<ActionResult<UserDto>> GetUserById(int id)
-        {
-            var user = await _userService.GetUserById(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            var userDto = new UserDto
-            {
-                Id = user.Id,
-                Login = user.Login,
-                UserName = user.UserName,
-                IsAdmin = user.IsAdmin
-            };
-
-            return Ok(userDto);
-        }
-
         [HttpPost("add-user")]
         public async Task<ActionResult<UserDto>> AddUser([FromBody] UserCreateDto userCreateDto)
         {
@@ -66,6 +46,59 @@ namespace Oganesyan_WebAPI.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("get-user-by-id/{id}")]
+        public async Task<ActionResult<UserDto>> GetUserById(int id)
+        {
+            var user = await _userService.GetUserById(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Login = user.Login,
+                UserName = user.UserName,
+                IsAdmin = user.IsAdmin
+            };
+
+            return Ok(userDto);
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("get-users")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
+        {
+            var users = await _userService.GetUsers();
+            var result = users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                Login = u.Login,
+                UserName = u.UserName,
+                IsAdmin = u.IsAdmin
+            })
+            .ToList();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("get-profile")]
+        public async Task<ActionResult<UserDto>> GetProfile()
+        {
+            var profile = await _userService.GetProfile();
+            return Ok(profile);
+        }
+
+        [Authorize]
+        [HttpGet("get-statistics")]
+        public async Task<ActionResult<UserSolutionDto>> GetStatistics()
+        {
+            var statistics = await _userService.GetStatistics();
+            return Ok(statistics);
         }
 
         [Authorize(Roles = "admin")]
@@ -162,14 +195,5 @@ namespace Oganesyan_WebAPI.Controllers
 
         //    return NoContent();
         //}
-
-        [Authorize(Roles = "admin")]
-        [HttpGet("get-users")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
-        {
-            var users = await _userService.GetUsers();
-            var result = users.Select(u => new UserDto { Id = u.Id, Login = u.Login, UserName = u.UserName, IsAdmin = u.IsAdmin }).ToList();
-            return Ok(result);
-        }
     }
 }

@@ -40,7 +40,5 @@ namespace Oganesyan_WebAPI.Models
 
             return hash == PasswordHash;
         }
-
-        // +-: просмотр профиля/просмотреть статистику
     }
 }

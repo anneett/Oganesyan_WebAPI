@@ -30,7 +30,7 @@ namespace Oganesyan_WebAPI.Controllers
 
             if (user == null || !user.CheckPassword(ld.Password))
             {
-                return Unauthorized(new { message = "wrong login/password" });
+                return Unauthorized(new { message = "Wrong login/password." });
             }
 
             var token = _authService.GenerateToken(user);
