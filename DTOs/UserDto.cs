@@ -1,4 +1,6 @@
-﻿namespace Oganesyan_WebAPI.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Oganesyan_WebAPI.DTOs
 {
     public class UserDto
     {

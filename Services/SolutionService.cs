@@ -23,6 +23,9 @@ namespace Oganesyan_WebAPI.Services
                 return null;
             }
 
+            if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer))
+                throw new ArgumentException("The answer cannot be empty.");
+
             var solution = new Models.Solution
             {
                 UserId = userId,

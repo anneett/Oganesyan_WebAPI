@@ -1,8 +1,11 @@
-﻿namespace Oganesyan_WebAPI.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Oganesyan_WebAPI.DTOs
 {
     public class UserUpdateDto
     {
-        public string UserName { get; set; } = string.Empty;
-        public string PasswordHash { get; private set; } = string.Empty;
+        [MaxLength(50)]
+        public string? UserName { get; set; }
+        public string? PasswordHash { get; set; }
     }
 }

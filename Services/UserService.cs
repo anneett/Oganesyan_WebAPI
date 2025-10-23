@@ -98,7 +98,7 @@ namespace Oganesyan_WebAPI.Services
             int userId = GetUserId();
             return await _solutionService.GetUserSolutionsDetailed(userId);
         }
-        public async Task<bool> UpdateUser(int id, UserUpdateDto userUpdateDto)
+        public async Task<User?> UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -110,10 +110,12 @@ namespace Oganesyan_WebAPI.Services
                 if (!string.IsNullOrWhiteSpace(userUpdateDto.PasswordHash))
                     user.SetPassword(userUpdateDto.PasswordHash);
 
+                user.SetPassword(userUpdateDto.PasswordHash);
+
                 await _context.SaveChangesAsync();
-                return true;
+                return user;
             }
-            return false;
+            return null;
         }
         public async Task<bool> ChangeUserRole(int id)
         {

@@ -11,7 +11,7 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251022181821_InitialCreate")]
+    [Migration("20251023162026_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -22,15 +22,17 @@ namespace Oganesyan_WebAPI.Migrations
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.DbMeta", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ConnectionString")
                         .IsRequired()
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Provider")
-                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("dbType")
@@ -57,9 +59,13 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Title")
+                        .IsUnique();
 
                     b.ToTable("Exercises");
                 });
@@ -75,6 +81,9 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Result")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("TEXT");
@@ -104,6 +113,7 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Property<string>("Login")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
@@ -122,9 +132,13 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Login")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.Pkcs;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography.Pkcs;
 
 namespace Oganesyan_WebAPI.DTOs
 {

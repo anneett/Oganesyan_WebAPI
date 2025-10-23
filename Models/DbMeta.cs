@@ -1,10 +1,19 @@
-﻿namespace Oganesyan_WebAPI.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Oganesyan_WebAPI.Models
 {
     public class DbMeta
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
+
+        [Required]
         public string dbType { get; set; }
+
+        [Required]
+        [MaxLength(500)]
         public string ConnectionString { get; set; }
-        public string Provider { get; set; }
+
+        [MaxLength(100)]
+        public string? Provider { get; set; }
     }
 }

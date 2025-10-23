@@ -19,6 +19,9 @@ namespace Oganesyan_WebAPI.Services
 
         public async Task<Exercise> AddExercise(ExerciseCreateDto exerciseCreateDto)
         {
+            if (await _context.Exercises.AnyAsync(e => e.Title == exerciseCreateDto.Title))
+                throw new InvalidOperationException("An exercise with this name already exists.");
+
             var exercise = new Exercise
             {
                 Title = exerciseCreateDto.Title,

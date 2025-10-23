@@ -17,7 +17,7 @@ namespace Oganesyan_WebAPI.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Difficulty = table.Column<int>(type: "INTEGER", nullable: false),
                     CorrectAnswer = table.Column<string>(type: "TEXT", nullable: false)
                 },
@@ -30,10 +30,11 @@ namespace Oganesyan_WebAPI.Migrations
                 name: "Meta",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     dbType = table.Column<string>(type: "TEXT", nullable: false),
-                    ConnectionString = table.Column<string>(type: "TEXT", nullable: false),
-                    Provider = table.Column<string>(type: "TEXT", nullable: false)
+                    ConnectionString = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    Provider = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -46,8 +47,8 @@ namespace Oganesyan_WebAPI.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    UserName = table.Column<string>(type: "TEXT", nullable: false),
-                    Login = table.Column<string>(type: "TEXT", nullable: false),
+                    UserName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Login = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
                     Salt = table.Column<string>(type: "TEXT", nullable: false),
                     IsAdmin = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -69,7 +70,8 @@ namespace Oganesyan_WebAPI.Migrations
                     ExerciseId = table.Column<int>(type: "INTEGER", nullable: false),
                     UserAnswer = table.Column<string>(type: "TEXT", nullable: false),
                     IsCorrect = table.Column<bool>(type: "INTEGER", nullable: false),
-                    SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Result = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -83,9 +85,21 @@ namespace Oganesyan_WebAPI.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Exercises_Title",
+                table: "Exercises",
+                column: "Title",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Solutions_ExerciseId",
                 table: "Solutions",
                 column: "ExerciseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Login",
+                table: "Users",
+                column: "Login",
+                unique: true);
         }
 
         /// <inheritdoc />
