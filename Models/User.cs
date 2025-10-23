@@ -11,9 +11,19 @@ namespace Oganesyan_WebAPI.Models
     public class User
     {
         public int Id { get; set; }
+
+        [Required]
+        [MaxLength(50)]
         public string UserName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
         public string Login { get; set; } = string.Empty;
+
+        [Required]
         public string PasswordHash { get; private set; } = string.Empty;
+
+        [Required]
         public string Salt { get; private set; } = string.Empty;
         public bool IsAdmin { get; set; } = false;
 
@@ -23,29 +33,26 @@ namespace Oganesyan_WebAPI.Models
         [JsonIgnore]
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
-        public void SetPassword(string rawPassword)
+        public void SetPassword(string frontendHash)
         {
             var saltBytes = RandomNumberGenerator.GetBytes(16);
             Salt = Convert.ToBase64String(saltBytes);
 
-            var combined = Encoding.UTF8.GetBytes(rawPassword + Salt);
+            using var pbkdf2 = new Rfc2898DeriveBytes(frontendHash, saltBytes, 100000, HashAlgorithmName.SHA256);
+            var hash = pbkdf2.GetBytes(32);
 
-            using var sha256 = SHA256.Create();
-            var hashBytes = sha256.ComputeHash(combined);
-            PasswordHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+            PasswordHash = Convert.ToBase64String(hash);
         }
-
-        public bool CheckPassword(string rawPassword)
+        public bool CheckPassword(string frontendHash)
         {
             if (string.IsNullOrEmpty(Salt) || string.IsNullOrEmpty(PasswordHash))
                 return false;
 
-            var combined = Encoding.UTF8.GetBytes(rawPassword + Salt);
-            using var sha256 = SHA256.Create();
-            var hashBytes = sha256.ComputeHash(combined);
-            var hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+            var saltBytes = Convert.FromBase64String(Salt);
+            using var pbkdf2 = new Rfc2898DeriveBytes(frontendHash, saltBytes, 100000, HashAlgorithmName.SHA256);
+            var computedHash = pbkdf2.GetBytes(32);
 
-            return hash == PasswordHash;
+            return Convert.ToBase64String(computedHash) == PasswordHash;
         }
     }
 }

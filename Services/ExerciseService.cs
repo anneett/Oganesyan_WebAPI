@@ -38,9 +38,9 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Exercises.ToListAsync();
         }
-        public async Task<double> PercentCorrect(int exerciseId)
+        public async Task<ExerciseStatsDto?> GetExerciseStatsById(int exerciseId)
         {
-            return await _solutionService.GetPercentCorrectById(exerciseId);
+            return await _solutionService.GetExerciseStatsById(exerciseId);
         }
     }
 }

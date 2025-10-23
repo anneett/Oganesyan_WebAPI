@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
+using System.Configuration;
 using System.Security.Claims;
 
 namespace Oganesyan_WebAPI.Controllers
@@ -20,7 +21,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("add-solution")]
+        [HttpPost("add")]
         public async Task<ActionResult<Solution>> AddSolution(SolutionCreateDto solutionCreateDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -39,7 +40,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("get-solution/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Solution>> GetSolutionById(int id)
         {
             var solution = await _solutionService.GetSolutionById(id);
@@ -52,17 +53,17 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("get-solutions")]
+        [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<Solution>>> GetSolutions()
         {
             return await _solutionService.GetSolutions();
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("get-percent-all")]
-        public async Task<ActionResult<Dictionary<int, double>>> GetPercentCorrectForAll()
+        [HttpGet("percentall")]
+        public async Task<ActionResult<List<ExerciseStatsDto>>> GetPercentCorrectForAll()
         {
-            return await _solutionService.GetPercentCorrectForAll();
+            return await _solutionService.GetExerciseStatsForAll();
         }
     }
 }

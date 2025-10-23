@@ -26,7 +26,7 @@ namespace Oganesyan_WebAPI.Controllers
             _userService = userService;
         }
 
-        [HttpPost("add-user")]
+        [HttpPost("add")]
         public async Task<ActionResult<UserDto>> AddUser([FromBody] UserCreateDto userCreateDto)
         {
             try
@@ -49,7 +49,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("get-user-by-id/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUserById(int id)
         {
             var user = await _userService.GetUserById(id);
@@ -69,7 +69,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("get-users")]
+        [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
             var users = await _userService.GetUsers();
@@ -86,7 +86,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("get-profile")]
+        [HttpGet("profile")]
         public async Task<ActionResult<UserDto>> GetProfile()
         {
             var profile = await _userService.GetProfile();
@@ -94,7 +94,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("get-statistics")]
+        [HttpGet("stat")]
         public async Task<ActionResult<UserSolutionDto>> GetStatistics()
         {
             var statistics = await _userService.GetStatistics();
@@ -102,7 +102,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPut("update-user/{id}")]
+        [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateUserById(int id, [FromBody] UserUpdateDto userUpdateDto)
         {
             try
@@ -118,7 +118,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("update-user-self")]
+        [HttpPut("update")]
         public async Task<IActionResult> UpdateUserSelf([FromBody] UserUpdateDto userUpdateDto)
         {
             int userId = _userService.GetUserId();
@@ -135,41 +135,21 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPut("make-admin/{id}/make-admin")]
-        public async Task<IActionResult> MakeUserAdmin(int id)
+        [HttpPut("change/{id}")]
+        public async Task<IActionResult> ChangeUserRole(int id)
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
             {
                 return NotFound();
             }
-            await _userService.MakeAdmin(id);
+            await _userService.ChangeUserRole(id);
 
             return NoContent();
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPut("unmake-admin/{id}/unmake-admin")]
-        public async Task<IActionResult> UnmakeUserAdmin(int id)
-        {
-            int userId = _userService.GetUserId();
-            if (userId == id)
-            {
-                return BadRequest("You cannot unadminister yourself.");
-            }
-
-            var user = await _userService.GetUserById(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            await _userService.UnmakeAdmin(id);
-
-            return NoContent();
-        }
-
-        [Authorize(Roles = "admin")]
-        [HttpDelete("delete-user/{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUserById(int id)
         {
             var user = await _userService.GetUserById(id);
@@ -184,7 +164,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpDelete("delete-user-self")]
+        [HttpDelete("selfdelete")]
         public async Task<IActionResult> DeleteUserSelf()
         {
             int userId = _userService.GetUserId();

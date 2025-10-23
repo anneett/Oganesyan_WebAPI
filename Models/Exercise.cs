@@ -11,11 +11,16 @@ namespace Oganesyan_WebAPI.Models
     public class Exercise
     {
         public int Id { get; set; }
+
+        [Required]
+        [MaxLength(200)]
         public string Title { get; set; } = string.Empty;
 
         [Required]
         [EnumDataType(typeof(ExerciseDifficulty))]
         public ExerciseDifficulty Difficulty { get; set; }
+
+        [Required]
         public string CorrectAnswer { get; set; } = string.Empty;
 
         public bool CheckAnswer(string userAnswer)

@@ -25,7 +25,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPost("add-exercise")]
+        [HttpPost("add")]
         public async Task<ActionResult<Exercise>> AddExersice([FromBody] ExerciseCreateDto exerciseCreateDto)
         {
             var exercise = await _exerciseService.AddExercise(exerciseCreateDto);
@@ -33,7 +33,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("get-exercise/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Exercise>> GetExerciseById(int id)
         {
             var exercise = await _exerciseService.GetExerciseById(id);
@@ -46,17 +46,17 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("get-exercises")]
+        [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
         {
             return await _exerciseService.GetExercises();
         }
 
         [Authorize]
-        [HttpGet("get-percent/{id}")]
-        public async Task<ActionResult<double>> PercentCorrect(int id)
+        [HttpGet("percent/{id}")]
+        public async Task<ActionResult<ExerciseStatsDto?>> GetExerciseStats(int id)
         {
-            return await _exerciseService.PercentCorrect(id);
+            return await _exerciseService.GetExerciseStatsById(id);
         }
     }
 }

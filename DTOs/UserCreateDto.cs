@@ -7,6 +7,6 @@ namespace Oganesyan_WebAPI.DTOs
     {
         public string UserName { get; set; } = string.Empty;
         public string Login { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        public string PasswordHash { get; private set; } = string.Empty;
     }
 }

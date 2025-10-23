@@ -21,7 +21,7 @@ namespace Oganesyan_WebAPI.Controllers
         public class LoginData
         {
             public string Login { get; set; } = string.Empty;
-            public string Password { get; set; } = string.Empty;
+            public string FrontendHash { get; set; } = string.Empty;
         }
 
         [HttpPost("login")]
@@ -29,7 +29,7 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var user = await _userService.GetUserByLogin(ld.Login);
 
-            if (user == null || !user.CheckPassword(ld.Password))
+            if (user == null || !user.CheckPassword(ld.FrontendHash))
             {
                 return Unauthorized(new { message = "Wrong login/password." });
             }
@@ -47,7 +47,7 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var user = await _userService.GetByRefreshTokenAsync(request.RefreshToken);
             if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
-                return Unauthorized("Недействительный refresh токен");
+                return Unauthorized("Invalid refresh token.");
 
             var newAccessToken = _authService.GenerateAccessToken(user);
             var newRefreshToken = _authService.GenerateRefreshToken();

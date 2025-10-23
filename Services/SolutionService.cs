@@ -28,9 +28,26 @@ namespace Oganesyan_WebAPI.Services
                 UserId = userId,
                 ExerciseId = solutionCreateDto.ExerciseId,
                 UserAnswer = solutionCreateDto.UserAnswer,
-                IsCorrect = exercise.CheckAnswer(solutionCreateDto.UserAnswer),
                 SubmittedAt = DateTime.UtcNow
             };
+
+            try
+            {
+                solution.IsCorrect = exercise.CheckAnswer(solutionCreateDto.UserAnswer);
+                if (solution.IsCorrect)
+                {
+                    solution.Result = "OK";
+                }
+                else
+                {
+                    solution.Result = $"WrongAnswer: expected {exercise.CorrectAnswer}, got {solution.UserAnswer}";
+                }
+            }
+            catch (Exception ex)
+            {
+                solution.IsCorrect = false;
+                solution.Result = $"Error: {ex.Message}";
+            }
 
             _context.Solutions.Add(solution);
             await _context.SaveChangesAsync();
@@ -41,44 +58,69 @@ namespace Oganesyan_WebAPI.Services
         {
             return await _context.Solutions.FindAsync(id);
         }
-
         public async Task<List<Models.Solution>> GetSolutions()
         {
             return await _context.Solutions.ToListAsync();
         }
-        public async Task<double> GetPercentCorrectById(int exerciseId)
+        public async Task<ExerciseStatsDto?> GetExerciseStatsById(int exerciseId)
         {
-            var stats = await _context.Solutions
+            var exercise = await _context.Exercises.FindAsync(exerciseId);
+            if (exercise == null)
+                return null;
+
+            var solutions = await _context.Solutions
                 .Where(s => s.ExerciseId == exerciseId)
-                .GroupBy(s => s.ExerciseId)
-                .Select(g => new
+                .ToListAsync();
+
+            if (solutions.Count == 0)
+                return new ExerciseStatsDto
                 {
-                    Total = g.Count(),
-                    Correct = g.Count(s => s.IsCorrect)
-                })
-                .FirstOrDefaultAsync();
+                    ExerciseId = exerciseId,
+                    ExerciseTitle = exercise.Title,
+                    TotalAttempts = 0,
+                    UniqueUsers = 0,
+                    CorrectAnswers = 0,
+                    PercentCorrect = 0
+                };
 
-                if (stats == null || stats.Total == 0)
-                    return 0;
+            var totalAttempts = solutions.Count;
+            var correctAnswers = solutions.Count(s => s.IsCorrect);
+            var uniqueUsers = solutions.Select(s => s.UserId).Distinct().Count();
 
-                return (double)stats.Correct / stats.Total * 100.0;
+            return new ExerciseStatsDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseTitle = exercise.Title,
+                TotalAttempts = totalAttempts,
+                UniqueUsers = uniqueUsers,
+                CorrectAnswers = correctAnswers,
+                PercentCorrect = (double)correctAnswers / totalAttempts * 100.0
+            };
         }
-        public async Task<Dictionary<int, double>> GetPercentCorrectForAll()
+        public async Task<List<ExerciseStatsDto>> GetExerciseStatsForAll()
         {
-            var stats = await _context.Solutions
-                .GroupBy(s => s.ExerciseId)
-                .Select(g => new
+            var stats = await _context.Exercises
+                .Select(e => new ExerciseStatsDto
                 {
-                    ExerciseId = g.Key,
-                    Total = g.Count(),
-                    Correct = g.Count(s => s.IsCorrect)
+                    ExerciseId = e.Id,
+                    ExerciseTitle = e.Title,
+                    TotalAttempts = _context.Solutions.Count(s => s.ExerciseId == e.Id),
+                    UniqueUsers = _context.Solutions
+                        .Where(s => s.ExerciseId == e.Id)
+                        .Select(s => s.UserId)
+                        .Distinct()
+                        .Count(),
+                    CorrectAnswers = _context.Solutions
+                        .Count(s => s.ExerciseId == e.Id && s.IsCorrect)
                 })
                 .ToListAsync();
 
-            return stats.ToDictionary(
-                x => x.ExerciseId,
-                x => (double)x.Correct / x.Total * 100.0
-             );
+            foreach (var s in stats)
+            {
+                s.PercentCorrect = s.TotalAttempts == 0 ? 0 : Math.Round((double)s.CorrectAnswers / s.TotalAttempts * 100.0, 2);
+            }
+
+            return stats;
         }
         public async Task<IEnumerable<UserSolutionDto>> GetUserSolutionsDetailed(int userId)
         {
@@ -94,7 +136,8 @@ namespace Oganesyan_WebAPI.Services
                     CorrectAnswer = s.Exercise.CorrectAnswer,
                     UserAnswer = s.UserAnswer,
                     IsCorrect = s.IsCorrect,
-                    SubmittedAt = s.SubmittedAt
+                    SubmittedAt = s.SubmittedAt,
+                    Result = s.Result
                 })
                 .ToListAsync();
 

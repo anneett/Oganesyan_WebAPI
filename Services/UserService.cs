@@ -33,7 +33,6 @@ namespace Oganesyan_WebAPI.Services
                 await _context.SaveChangesAsync();
             }
         }
-
         public async Task<User> AddUser(UserCreateDto userCreateDto)
         {
             var existing = await GetUserByLogin(userCreateDto.Login);
@@ -50,7 +49,7 @@ namespace Oganesyan_WebAPI.Services
                 user.IsAdmin = true;
             }
 
-            user.SetPassword(userCreateDto.Password);
+            user.SetPassword(userCreateDto.PasswordHash);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -108,32 +107,20 @@ namespace Oganesyan_WebAPI.Services
                 if (!string.IsNullOrWhiteSpace(userUpdateDto.UserName))
                     user.UserName = userUpdateDto.UserName;
 
-                if (!string.IsNullOrWhiteSpace(userUpdateDto.Password))
-                    user.SetPassword(userUpdateDto.Password);
+                if (!string.IsNullOrWhiteSpace(userUpdateDto.PasswordHash))
+                    user.SetPassword(userUpdateDto.PasswordHash);
 
                 await _context.SaveChangesAsync();
                 return true;
             }
             return false;
         }
-
-        public async Task<bool> MakeAdmin(int id)
+        public async Task<bool> ChangeUserRole(int id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user != null)
             {
-                user.IsAdmin = true;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            return false;
-        }
-        public async Task<bool> UnmakeAdmin(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                user.IsAdmin = false;
+                user.IsAdmin = !user.IsAdmin;
                 await _context.SaveChangesAsync();
                 return true;
             }
