@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.4",
     "info": {
-        "title": "GUtv Booker API",
+        "title": "Oganesyan_WebAPI",
         "version": "v1"
     },
     "paths": {
@@ -36,47 +36,38 @@
                 }
             }
         },
-        "/api/Exercises/get-exercise/{id}": {
-            "get": {
+        "/api/Auth/refresh": {
+            "post": {
                 "tags": [
-                    "Exercises"
+                    "Auth"
                 ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Exercise"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Exercise"
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Exercise"
-                                }
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
                             }
                         }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
         },
-        "/api/Exercises/add-exercise": {
+        "/api/Exercises/add": {
             "post": {
                 "tags": [
                     "Exercises"
@@ -124,7 +115,47 @@
                 }
             }
         },
-        "/api/Exercises/get-exercises": {
+        "/api/Exercises/{id}": {
+            "get": {
+                "tags": [
+                    "Exercises"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Exercise"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Exercise"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Exercise"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/Exercises/all": {
             "get": {
                 "tags": [
                     "Exercises"
@@ -162,7 +193,95 @@
                 }
             }
         },
-        "/api/Solutions/get-solution/{id}": {
+        "/api/Exercises/percent/{id}": {
+            "get": {
+                "tags": [
+                    "Exercises"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExerciseStatsDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExerciseStatsDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExerciseStatsDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/Solutions/add": {
+            "post": {
+                "tags": [
+                    "Solutions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SolutionCreateDto"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SolutionCreateDto"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SolutionCreateDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Solution"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Solution"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Solution"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/Solutions/{id}": {
             "get": {
                 "tags": [
                     "Solutions"
@@ -202,26 +321,102 @@
                 }
             }
         },
-        "/api/Solutions/add-solution": {
-            "post": {
+        "/api/Solutions/all": {
+            "get": {
                 "tags": [
                     "Solutions"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Solution"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Solution"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Solution"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/Solutions/percentall": {
+            "get": {
+                "tags": [
+                    "Solutions"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExerciseStatsDto"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExerciseStatsDto"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExerciseStatsDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/Users/add": {
+            "post": {
+                "tags": [
+                    "Users"
                 ],
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/SolutionCreateDto"
+                                "$ref": "#/components/schemas/UserCreateDto"
                             }
                         },
                         "text/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/SolutionCreateDto"
+                                "$ref": "#/components/schemas/UserCreateDto"
                             }
                         },
                         "application/*+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/SolutionCreateDto"
+                                "$ref": "#/components/schemas/UserCreateDto"
                             }
                         }
                     }
@@ -232,17 +427,17 @@
                         "content": {
                             "text/plain": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Solution"
+                                    "$ref": "#/components/schemas/UserDto"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Solution"
+                                    "$ref": "#/components/schemas/UserDto"
                                 }
                             },
                             "text/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Solution"
+                                    "$ref": "#/components/schemas/UserDto"
                                 }
                             }
                         }
@@ -250,7 +445,7 @@
                 }
             }
         },
-        "/api/Users/get-user-by-id/{id}": {
+        "/api/Users/{id}": {
             "get": {
                 "tags": [
                     "Users"
@@ -290,30 +485,49 @@
                 }
             }
         },
-        "/api/Users/add-user": {
-            "post": {
+        "/api/Users/all": {
+            "get": {
                 "tags": [
                     "Users"
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserCreateDto"
-                            }
-                        },
-                        "text/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserCreateDto"
-                            }
-                        },
-                        "application/*+json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserCreateDto"
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserDto"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserDto"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserDto"
+                                    }
+                                }
                             }
                         }
                     }
-                },
+                }
+            }
+        },
+        "/api/Users/profile": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -338,7 +552,36 @@
                 }
             }
         },
-        "/api/Users/update-user/{id}": {
+        "/api/Users/stat": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserSolutionDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserSolutionDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserSolutionDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/Users/update/{id}": {
             "put": {
                 "tags": [
                     "Users"
@@ -380,7 +623,38 @@
                 }
             }
         },
-        "/api/Users/make-admin/{id}/make-admin": {
+        "/api/Users/update": {
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdateDto"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdateDto"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdateDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/Users/change/{id}": {
             "put": {
                 "tags": [
                     "Users"
@@ -403,30 +677,7 @@
                 }
             }
         },
-        "/api/Users/unmake-admin/{id}/unmake-admin": {
-            "put": {
-                "tags": [
-                    "Users"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/Users/delete-user/{id}": {
+        "/api/Users/delete/{id}": {
             "delete": {
                 "tags": [
                     "Users"
@@ -449,40 +700,14 @@
                 }
             }
         },
-        "/api/Users/get-users": {
-            "get": {
+        "/api/Users/selfdelete": {
+            "delete": {
                 "tags": [
                     "Users"
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/UserDto"
-                                    }
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/UserDto"
-                                    }
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/UserDto"
-                                    }
-                                }
-                            }
-                        }
+                        "description": "OK"
                     }
                 }
             }
@@ -492,7 +717,9 @@
         "schemas": {
             "Exercise": {
                 "required": [
-                    "difficulty"
+                    "correctAnswer",
+                    "difficulty",
+                    "title"
                 ],
                 "type": "object",
                 "properties": {
@@ -501,32 +728,39 @@
                         "format": "int32"
                     },
                     "title": {
-                        "type": "string",
-                        "nullable": true
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
                     },
                     "difficulty": {
                         "$ref": "#/components/schemas/ExerciseDifficulty"
                     },
                     "correctAnswer": {
-                        "type": "string",
-                        "nullable": true
+                        "minLength": 1,
+                        "type": "string"
                     }
                 },
                 "additionalProperties": false
             },
             "ExerciseCreateDto": {
+                "required": [
+                    "correctAnswer",
+                    "difficulty",
+                    "title"
+                ],
                 "type": "object",
                 "properties": {
                     "title": {
-                        "type": "string",
-                        "nullable": true
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
                     },
                     "difficulty": {
                         "$ref": "#/components/schemas/ExerciseDifficulty"
                     },
                     "correctAnswer": {
-                        "type": "string",
-                        "nullable": true
+                        "minLength": 1,
+                        "type": "string"
                     }
                 },
                 "additionalProperties": false
@@ -540,6 +774,36 @@
                 "type": "integer",
                 "format": "int32"
             },
+            "ExerciseStatsDto": {
+                "type": "object",
+                "properties": {
+                    "exerciseId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "exerciseTitle": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "totalAttempts": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "uniqueUsers": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "correctAnswers": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "percentCorrect": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                },
+                "additionalProperties": false
+            },
             "LoginData": {
                 "type": "object",
                 "properties": {
@@ -547,7 +811,20 @@
                         "type": "string",
                         "nullable": true
                     },
-                    "password": {
+                    "frontendHash": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false
+            },
+            "RefreshRequest": {
+                "required": [
+                    "refreshToken"
+                ],
+                "type": "object",
+                "properties": {
+                    "refreshToken": {
                         "type": "string",
                         "nullable": true
                     }
@@ -555,6 +832,10 @@
                 "additionalProperties": false
             },
             "Solution": {
+                "required": [
+                    "exerciseId",
+                    "userAnswer"
+                ],
                 "type": "object",
                 "properties": {
                     "id": {
@@ -573,8 +854,8 @@
                         "$ref": "#/components/schemas/Exercise"
                     },
                     "userAnswer": {
-                        "type": "string",
-                        "nullable": true
+                        "minLength": 1,
+                        "type": "string"
                     },
                     "isCorrect": {
                         "type": "boolean"
@@ -582,11 +863,19 @@
                     "submittedAt": {
                         "type": "string",
                         "format": "date-time"
+                    },
+                    "result": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "additionalProperties": false
             },
             "SolutionCreateDto": {
+                "required": [
+                    "exerciseId",
+                    "userAnswer"
+                ],
                 "type": "object",
                 "properties": {
                     "exerciseId": {
@@ -594,27 +883,33 @@
                         "format": "int32"
                     },
                     "userAnswer": {
-                        "type": "string",
-                        "nullable": true
+                        "minLength": 1,
+                        "type": "string"
                     }
                 },
                 "additionalProperties": false
             },
             "UserCreateDto": {
+                "required": [
+                    "login",
+                    "passwordHash",
+                    "userName"
+                ],
                 "type": "object",
                 "properties": {
                     "userName": {
-                        "type": "string",
-                        "nullable": true
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "type": "string"
                     },
                     "login": {
-                        "type": "string",
-                        "nullable": true
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "type": "string"
                     },
-                    "password": {
-                        "type": "string",
-                        "nullable": true,
-                        "readOnly": true
+                    "passwordHash": {
+                        "minLength": 1,
+                        "type": "string"
                     }
                 },
                 "additionalProperties": false
@@ -640,14 +935,62 @@
                 },
                 "additionalProperties": false
             },
+            "UserSolutionDto": {
+                "required": [
+                    "exerciseDifficulty"
+                ],
+                "type": "object",
+                "properties": {
+                    "solutionId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "userId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "exerciseId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "exerciseTitle": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "exerciseDifficulty": {
+                        "$ref": "#/components/schemas/ExerciseDifficulty"
+                    },
+                    "correctAnswer": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "userAnswer": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "isCorrect": {
+                        "type": "boolean"
+                    },
+                    "submittedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "result": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false
+            },
             "UserUpdateDto": {
                 "type": "object",
                 "properties": {
                     "userName": {
+                        "maxLength": 50,
                         "type": "string",
                         "nullable": true
                     },
-                    "password": {
+                    "passwordHash": {
                         "type": "string",
                         "nullable": true
                     }

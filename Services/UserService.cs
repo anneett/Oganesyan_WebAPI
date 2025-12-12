@@ -89,7 +89,8 @@ namespace Oganesyan_WebAPI.Services
                 Id = user.Id,
                 UserName = user.UserName,
                 Login = user.Login,
-                IsAdmin = user.IsAdmin
+                IsAdmin = user.IsAdmin,
+                InArchive = user.InArchive
             };
             return userDto;
         }
@@ -107,11 +108,6 @@ namespace Oganesyan_WebAPI.Services
                 if (!string.IsNullOrWhiteSpace(userUpdateDto.UserName))
                     user.UserName = userUpdateDto.UserName;
 
-                if (!string.IsNullOrWhiteSpace(userUpdateDto.PasswordHash))
-                    user.SetPassword(userUpdateDto.PasswordHash);
-
-                user.SetPassword(userUpdateDto.PasswordHash);
-
                 await _context.SaveChangesAsync();
                 return user;
             }
@@ -128,14 +124,25 @@ namespace Oganesyan_WebAPI.Services
             }
             return false;
         }
-        public async Task<bool> DeleteUser(int id)
+        public async Task<bool> ArchiveUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return false;
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return true;
+            if (user != null)
+            {
+                user.InArchive = !user.InArchive;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
         }
+        //public async Task<bool> DeleteUser(int id)
+        //{
+        //    var user = await _context.Users.FindAsync(id);
+        //    if (user == null) return false;
+
+        //    _context.Users.Remove(user);
+        //    await _context.SaveChangesAsync();
+        //    return true;
+        //}
     }
 }

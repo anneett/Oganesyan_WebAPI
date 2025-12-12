@@ -6,20 +6,21 @@ using Microsoft.OpenApi.Models;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("SQLiteConnection") ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("SQLiteConnection")
+                      ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<AuthOptions>();
-
-// Add services to the container.
-builder.Services.AddScoped<ExerciseService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<SolutionService>();
-builder.Services.AddScoped<AuthService>();
-
-builder.Services.AddSingleton(jwtSettings);
+var authOptions = builder.Configuration.GetSection("JwtSettings").Get<AuthOptions>()
+                  ?? throw new InvalidOperationException("JwtSettings section is missing.");
+builder.Services.AddSingleton(authOptions);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -27,20 +28,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtSettings.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtSettings.Audience,
             ValidateLifetime = true,
-            IssuerSigningKey = jwtSettings.GetSymmetricSecurityKey(),
             ValidateIssuerSigningKey = true,
+            ValidIssuer = authOptions.Issuer,
+            ValidAudience = authOptions.Audience,
+            IssuerSigningKey = authOptions.GetSymmetricSecurityKey()
         };
     });
-builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowCon",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
+// Add services to the container.
+builder.Services.AddScoped<ExerciseService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<SolutionService>();
+builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Oganesyan_WebAPI", Version = "v1" });
@@ -78,17 +96,19 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-        c.RoutePrefix = string.Empty;
-    });
+    app.UseSwaggerUI();
+    //app.UseSwaggerUI(c =>
+    //{
+    //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+    //    c.RoutePrefix = string.Empty;
+    //});
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("AllowCon");
 
 app.MapControllers();
 

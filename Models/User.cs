@@ -26,6 +26,7 @@ namespace Oganesyan_WebAPI.Models
         [Required]
         public string Salt { get; private set; } = string.Empty;
         public bool IsAdmin { get; set; } = false;
+        public bool InArchive { get; set; } = false;
 
         [JsonIgnore]
         public string? RefreshToken { get; set; }

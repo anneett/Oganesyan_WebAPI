@@ -37,7 +37,8 @@ namespace Oganesyan_WebAPI.Controllers
                     Id = user.Id,
                     Login = user.Login,
                     UserName = user.UserName,
-                    IsAdmin = user.IsAdmin
+                    IsAdmin = user.IsAdmin,
+                    InArchive = user.InArchive
                 };
 
                 return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, result);
@@ -62,7 +63,8 @@ namespace Oganesyan_WebAPI.Controllers
                 Id = user.Id,
                 Login = user.Login,
                 UserName = user.UserName,
-                IsAdmin = user.IsAdmin
+                IsAdmin = user.IsAdmin,
+                InArchive = user.InArchive
             };
 
             return Ok(userDto);
@@ -78,7 +80,8 @@ namespace Oganesyan_WebAPI.Controllers
                 Id = u.Id,
                 Login = u.Login,
                 UserName = u.UserName,
-                IsAdmin = u.IsAdmin
+                IsAdmin = u.IsAdmin,
+                InArchive = u.InArchive
             })
             .ToList();
 
@@ -101,24 +104,8 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(statistics);
         }
 
-        [Authorize(Roles = "admin")]
-        [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateUserById(int id, [FromBody] UserUpdateDto userUpdateDto)
-        {
-            try
-            {
-                await _userService.UpdateUser(id, userUpdateDto);
-            }
-            catch (Exception)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
-        }
-
         [Authorize]
-        [HttpPut("update")]
+        [HttpPatch("update")]
         public async Task<IActionResult> UpdateUserSelf([FromBody] UserUpdateDto userUpdateDto)
         {
             int userId = _userService.GetUserId();
@@ -135,7 +122,7 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPut("change/{id}")]
+        [HttpPatch("change/{id}")]
         public async Task<IActionResult> ChangeUserRole(int id)
         {
             var user = await _userService.GetUserById(id);
@@ -149,35 +136,63 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteUserById(int id)
+        [HttpPatch("archive/{id}")]
+        public async Task<IActionResult> ArchiveUserById(int id)
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
             {
                 return NotFound();
             }
-
-            await _userService.DeleteUser(id);
-
+            await _userService.ArchiveUser(id);
             return NoContent();
         }
 
-        [Authorize]
-        [HttpDelete("selfdelete")]
-        public async Task<IActionResult> DeleteUserSelf()
-        {
-            int userId = _userService.GetUserId();
-            try
-            {
-                await _userService.DeleteUser(userId);
-            }
-            catch (Exception)
-            {
-                return NotFound();
-            }
+        //[Authorize(Roles = "admin")]
+        //[HttpPut("update/{id}")]
+        //public async Task<IActionResult> UpdateUserById(int id, [FromBody] UserUpdateDto userUpdateDto)
+        //{
+        //    try
+        //    {
+        //        await _userService.UpdateUser(id, userUpdateDto);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return NoContent();
+        //}
 
-            return NoContent();
-        }
+        //[Authorize(Roles = "admin")]
+        //[HttpDelete("delete/{id}")]
+        //public async Task<IActionResult> DeleteUserById(int id)
+        //{
+        //    var user = await _userService.GetUserById(id);
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    await _userService.DeleteUser(id);
+
+        //    return NoContent();
+        //}
+
+        //[Authorize]
+        //[HttpDelete("selfdelete")]
+        //public async Task<IActionResult> DeleteUserSelf()
+        //{
+        //    int userId = _userService.GetUserId();
+        //    try
+        //    {
+        //        await _userService.DeleteUser(userId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return NoContent();
+        //}
     }
 }

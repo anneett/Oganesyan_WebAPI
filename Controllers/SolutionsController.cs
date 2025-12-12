@@ -39,7 +39,7 @@ namespace Oganesyan_WebAPI.Controllers
             return CreatedAtAction(nameof(GetSolutionById), new { id = solution.Id }, solution);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Solution>> GetSolutionById(int id)
         {
