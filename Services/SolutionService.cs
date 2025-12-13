@@ -100,7 +100,28 @@ namespace Oganesyan_WebAPI.Services
                 PercentCorrect = (double)correctAnswers / totalAttempts * 100.0
             };
         }
-        public async Task<List<ExerciseStatsDto>> GetExerciseStatsForAll()
+        public async Task<IEnumerable<UserSolutionDto>> GetUserSolutionsDetailed(int userId)
+        {
+            var query = await _context.Solutions
+                .Include(s => s.Exercise)
+                .Where(s => s.UserId == userId)
+                .Select(s => new UserSolutionDto
+                {
+                    SolutionId = s.Id,
+                    ExerciseId = s.ExerciseId,
+                    ExerciseTitle = s.Exercise.Title,
+                    ExerciseDifficulty = s.Exercise.Difficulty,
+                    CorrectAnswer = s.Exercise.CorrectAnswer,
+                    UserAnswer = s.UserAnswer,
+                    IsCorrect = s.IsCorrect,
+                    SubmittedAt = s.SubmittedAt,
+                    Result = s.Result
+                })
+                .ToListAsync();
+
+            return query;
+        }
+        public async Task<List<ExerciseStatsDto>> GetStatsByExercises()
         {
             var stats = await _context.Exercises
                 .Select(e => new ExerciseStatsDto
@@ -125,26 +146,55 @@ namespace Oganesyan_WebAPI.Services
 
             return stats;
         }
-        public async Task<IEnumerable<UserSolutionDto>> GetUserSolutionsDetailed(int userId)
+        public async Task<List<UserStatsDto>> GetStatsByUsers()
         {
-            var query = await _context.Solutions
-                .Include(s => s.Exercise)
-                .Where(s => s.UserId == userId)
-                .Select(s => new UserSolutionDto
+            var stats = await _context.Users
+                .Select(u => new UserStatsDto
                 {
-                    SolutionId = s.Id,
-                    ExerciseId = s.ExerciseId,
-                    ExerciseTitle = s.Exercise.Title,
-                    ExerciseDifficulty = s.Exercise.Difficulty,
-                    CorrectAnswer = s.Exercise.CorrectAnswer,
-                    UserAnswer = s.UserAnswer,
-                    IsCorrect = s.IsCorrect,
-                    SubmittedAt = s.SubmittedAt,
-                    Result = s.Result
+                    UserId = u.Id,
+                    UserLogin = u.Login,
+                    TotalAttempts = _context.Solutions.Count(s => s.UserId == u.Id),
+                    UniqueExercises = _context.Solutions
+                        .Where(s => s.UserId == u.Id)
+                        .Select(s => s.ExerciseId)
+                        .Distinct()
+                        .Count(),
+                    CorrectAnswers = _context.Solutions
+                        .Count(s => s.UserId == u.Id && s.IsCorrect)
                 })
                 .ToListAsync();
 
-            return query;
+            foreach (var s in stats)
+            {
+                s.PercentCorrect = s.TotalAttempts == 0 ? 0 : Math.Round((double)s.CorrectAnswers / s.TotalAttempts * 100.0, 2);
+            }
+
+            return stats;
         }
+        //public async Task<List<ExerciseStatsDto>> GetExerciseStatsForAll()
+        //{
+        //    var stats = await _context.Exercises
+        //        .Select(e => new ExerciseStatsDto
+        //        {
+        //            ExerciseId = e.Id,
+        //            ExerciseTitle = e.Title,
+        //            TotalAttempts = _context.Solutions.Count(s => s.ExerciseId == e.Id),
+        //            UniqueUsers = _context.Solutions
+        //                .Where(s => s.ExerciseId == e.Id)
+        //                .Select(s => s.UserId)
+        //                .Distinct()
+        //                .Count(),
+        //            CorrectAnswers = _context.Solutions
+        //                .Count(s => s.ExerciseId == e.Id && s.IsCorrect)
+        //        })
+        //        .ToListAsync();
+
+        //    foreach (var s in stats)
+        //    {
+        //        s.PercentCorrect = s.TotalAttempts == 0 ? 0 : Math.Round((double)s.CorrectAnswers / s.TotalAttempts * 100.0, 2);
+        //    }
+
+        //    return stats;
+        //}
     }
 }

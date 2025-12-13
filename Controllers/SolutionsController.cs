@@ -60,10 +60,17 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("percentall")]
-        public async Task<ActionResult<List<ExerciseStatsDto>>> GetPercentCorrectForAll()
+        [HttpGet("exercises-percent")]
+        public async Task<ActionResult<List<ExerciseStatsDto>>> GetPercentCorrectForExercises()
         {
-            return await _solutionService.GetExerciseStatsForAll();
+            return await _solutionService.GetStatsByExercises();
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("users-percent")]
+        public async Task<ActionResult<List<UserStatsDto>>> GetPercentCorrectForUsers()
+        {
+            return await _solutionService.GetStatsByUsers();
         }
     }
 }
