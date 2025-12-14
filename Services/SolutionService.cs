@@ -171,30 +171,5 @@ namespace Oganesyan_WebAPI.Services
 
             return stats;
         }
-        //public async Task<List<ExerciseStatsDto>> GetExerciseStatsForAll()
-        //{
-        //    var stats = await _context.Exercises
-        //        .Select(e => new ExerciseStatsDto
-        //        {
-        //            ExerciseId = e.Id,
-        //            ExerciseTitle = e.Title,
-        //            TotalAttempts = _context.Solutions.Count(s => s.ExerciseId == e.Id),
-        //            UniqueUsers = _context.Solutions
-        //                .Where(s => s.ExerciseId == e.Id)
-        //                .Select(s => s.UserId)
-        //                .Distinct()
-        //                .Count(),
-        //            CorrectAnswers = _context.Solutions
-        //                .Count(s => s.ExerciseId == e.Id && s.IsCorrect)
-        //        })
-        //        .ToListAsync();
-
-        //    foreach (var s in stats)
-        //    {
-        //        s.PercentCorrect = s.TotalAttempts == 0 ? 0 : Math.Round((double)s.CorrectAnswers / s.TotalAttempts * 100.0, 2);
-        //    }
-
-        //    return stats;
-        //}
     }
 }
