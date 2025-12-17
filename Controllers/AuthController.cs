@@ -34,6 +34,11 @@ namespace Oganesyan_WebAPI.Controllers
                 return Unauthorized(new { message = "Wrong login/password." });
             }
 
+            if (user.InArchive)
+            {
+                return Unauthorized(new { message = "Your account has been archived." });
+            }
+
             var accessToken = _authService.GenerateAccessToken(user);
             var refreshToken = _authService.GenerateRefreshToken();
 
@@ -48,6 +53,11 @@ namespace Oganesyan_WebAPI.Controllers
             var user = await _userService.GetByRefreshTokenAsync(request.RefreshToken);
             if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
                 return Unauthorized("Invalid refresh token.");
+
+            if (user.InArchive)
+            {
+                return Unauthorized("Your account has been archived.");
+            }
 
             var newAccessToken = _authService.GenerateAccessToken(user);
             var newRefreshToken = _authService.GenerateRefreshToken();
