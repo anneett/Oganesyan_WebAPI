@@ -6,7 +6,9 @@ using Microsoft.OpenApi.Models;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
+using Oganesyan_WebAPI.TgBot;
 using System.Text;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +60,13 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<ITelegramBotClient>(sp =>
+{
+    var token = builder.Configuration["TelegramBot:Token"]
+        ?? throw new InvalidOperationException("Telegram bot token not found");
+    return new TelegramBotClient(token);
+});
+builder.Services.AddHostedService<SQLBotService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
