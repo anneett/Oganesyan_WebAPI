@@ -9,5 +9,6 @@ namespace Oganesyan_WebAPI.DTOs
         public string Login { get; set; } = string.Empty;
         public bool IsAdmin { get; set; } = false;
         public bool InArchive { get; set; } = false;
+        public bool IsTelegramLinked { get; set; } = false;
     }
 }

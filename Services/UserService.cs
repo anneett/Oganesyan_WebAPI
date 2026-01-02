@@ -90,7 +90,8 @@ namespace Oganesyan_WebAPI.Services
                 UserName = user.UserName,
                 Login = user.Login,
                 IsAdmin = user.IsAdmin,
-                InArchive = user.InArchive
+                InArchive = user.InArchive,
+                IsTelegramLinked = user.TelegramChatId != null
             };
             return userDto;
         }
@@ -135,6 +136,60 @@ namespace Oganesyan_WebAPI.Services
             }
             return false;
         }
+
+        public async Task<string> GenerateTelegramLinkCodeAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+
+            var random = new Random();
+            var code = random.Next(100000, 999999).ToString();
+
+            user.TelegramLinkCode = code;
+            user.TelegramLinkCodeExpiry = DateTime.UtcNow.AddMinutes(10);
+
+            await _context.SaveChangesAsync();
+            return code;
+        }
+
+        public async Task<bool> LinkTelegramAsync(string code, long telegramChatId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                u.TelegramLinkCode == code &&
+                u.TelegramLinkCodeExpiry > DateTime.UtcNow);
+
+            if (user == null)
+                return false;
+
+            user.TelegramChatId = telegramChatId;
+
+            user.TelegramLinkCode = null;
+            user.TelegramLinkCodeExpiry = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<User?> GetUserByTelegramChatIdAsync(long chatId)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.TelegramChatId == chatId);
+        }
+
+        public async Task<bool> UnlinkTelegramAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return false;
+
+            user.TelegramChatId = null;
+            user.TelegramLinkCode = null;
+            user.TelegramLinkCodeExpiry = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         //public async Task<bool> DeleteUser(int id)
         //{
         //    var user = await _context.Users.FindAsync(id);

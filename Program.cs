@@ -7,6 +7,7 @@ using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
 using Oganesyan_WebAPI.TgBot;
+using Oganesyan_WebAPI.TgBot.Handlers;
 using System.Text;
 using Telegram.Bot;
 
@@ -55,6 +56,10 @@ builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<SolutionService>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<MessageHandler>();
+builder.Services.AddScoped<CallbackHandler>();
+builder.Services.AddScoped<CommandHandler>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

@@ -50,14 +50,18 @@ namespace Oganesyan_WebAPI.TgBot
                 switch (update.Type)
                 {
                     case UpdateType.Message:
-                        var messageHandler = scope.ServiceProvider.GetRequiredService<MessageHandler>();
-                        await messageHandler.HandleAsync(botClient, update.Message!, cancellationToken);
-                        break;
+                        {
+                            var messageHandler = scope.ServiceProvider.GetRequiredService<MessageHandler>();
+                            await messageHandler.HandleAsync(botClient, update.Message!, cancellationToken);
+                            break;
+                        }
 
                     case UpdateType.CallbackQuery:
-                        var callbackHandler = scope.ServiceProvider.GetRequiredService<CallbackHandler>();
-                        await callbackHandler.HandleAsync(botClient, update.CallbackQuery!, cancellationToken);
-                        break;
+                        {
+                            var callbackHandler = scope.ServiceProvider.GetRequiredService<CallbackHandler>();
+                            await callbackHandler.HandleAsync(botClient, update.CallbackQuery!, cancellationToken);
+                            break;
+                        }
                 }
             }
             catch (Exception ex)
