@@ -1,4 +1,5 @@
 ﻿using Oganesyan_WebAPI.Services;
+using Oganesyan_WebAPI.TgBot.Keyboards;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -25,9 +26,9 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
             var userName = message.Chat.Username;
             var text = message.Text ?? string.Empty;
             var parts = text.Split(' ');
-            var command = parts[0].ToLower();
+            var command = text.StartsWith("/") ? parts[0].ToLower() : text.ToLower(); ;
 
-            _logger.LogInformation("Команда: {Command} от {UserName}", command, userName);
+            _logger.LogInformation("Обработка: {Command} от {UserName}", command, userName);
 
             switch (command)
             {
@@ -36,26 +37,34 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
                         await HandleStart(telegramBotClient, chatId, parts, cancellationToken);
                         break;
                     }
-                case "/help":
+                case "/exercises":
+                case "📝 задания":
                     {
-                        await HandleHelp(telegramBotClient, chatId, cancellationToken);
+                        await SendExercisesList(telegramBotClient, chatId, cancellationToken);
                         break;
                     }
                 case "/status":
+                case "📊 статус":
                     {
                         await HandleStatus(telegramBotClient, chatId, cancellationToken);
                         break;
                     }
-                case "/exercises":
+                case "/help":
+                case "❓ помощь":
                     {
-                        await SendExercisesList(telegramBotClient, chatId, cancellationToken);
+                        await HandleHelp(telegramBotClient, chatId, cancellationToken);
+                        break;
+                    }
+                case "🔗 как привязать?":
+                    {
+                        await HandleHowToLinkAsync(telegramBotClient, chatId, cancellationToken);
                         break;
                     }
                 default:
                     {
                         await telegramBotClient.SendMessage(
                             chatId: chatId,
-                            text: "❓ Неизвестная команда. Напиши /help",
+                            text: "❓ Неизвестная команда.  Используй кнопки меню или напиши /help",
                             cancellationToken: cancellationToken
                         );
                         break;
@@ -78,10 +87,10 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
 
                     await telegramBotClient.SendMessage(
                         chatId: chatId,
-                        text: "👋 Привет! Я бот для тренировки SQL.\n\n" +
-                                "📚 Доступные команды:\n" +
-                                "/exercises — список заданий\n" +
-                                "/help — помощь",
+                        text: $"✅ Привет, {user?.UserName}!\n\n" +
+                              "Аккаунт успешно привязан.\n\n" +
+                              "Используй кнопки меню ниже 👇",
+                        replyMarkup: ReplyKeyboards.MainMenu,
                         cancellationToken: cancellationToken
 
                     );
@@ -94,6 +103,7 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
                         chatId: chatId,
                         text: "❌ Код недействителен или просрочен.\n\n" +
                               "Получи новый код в профиле на сайте.",
+                        replyMarkup: ReplyKeyboards.GuestMenu,
                         cancellationToken: cancellationToken
                     );
 
@@ -109,10 +119,8 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
                 await telegramBotClient.SendMessage(
                     chatId: chatId,
                     text: $"👋 С возвращением, {existingUser.UserName}!\n\n" +
-                          "📚 Команды:\n" +
-                          "/exercises — список заданий\n" +
-                          "/status — статус аккаунта\n" +
-                          "/help — помощь",
+                          "Используй кнопки меню ниже 👇",
+                    replyMarkup: ReplyKeyboards.MainMenu,
                     cancellationToken: cancellationToken
                 );
             }
@@ -121,9 +129,10 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
                 await telegramBotClient.SendMessage(
                     chatId: chatId,
                     text: "👋 Привет! Я бот для тренировки SQL.\n\n" +
-                          "🔗 Для отправки решений привяжи аккаунт:\n" +
-                          "1. Зарегистрируйся на сайте\n" +
-                          "2. В профиле нажми «Привязать Telegram»",
+                          "📝 Можешь посмотреть задания\n" +
+                          "🔗 Для отправки решений привяжи аккаунт на сайте\n\n" +
+                          "Используй кнопки меню ниже 👇",
+                    replyMarkup: ReplyKeyboards.GuestMenu,
                     cancellationToken: cancellationToken
                 );
             }
@@ -156,13 +165,30 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
 
         private async Task HandleHelp(ITelegramBotClient telegramBotClient, long chatId, CancellationToken cancellationToken)
         {
+            var user = await _userService.GetUserByTelegramChatIdAsync(chatId);
             await telegramBotClient.SendMessage(
                 chatId: chatId,
-                text: "📚 Команды:\n\n" +
-                      "/start — начать\n" +
-                      "/exercises — список заданий\n" +
-                      "/status — статус аккаунта\n" +
-                      "/help — помощь",
+                text: "📚 Доступные команды:\n\n" +
+                      "📝 Задания — список задач\n" +
+                      "📊 Статус — информация об аккаунте\n" +
+                      "❓ Помощь — эта справка\n\n" +
+                      "Или используй команды:\n" +
+                      "/start, /exercises, /status, /help",
+                replyMarkup: user != null ? ReplyKeyboards.MainMenu : ReplyKeyboards.GuestMenu,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        private async Task HandleHowToLinkAsync(ITelegramBotClient telegramBotClient, long chatId, CancellationToken cancellationToken)
+        {
+            await telegramBotClient.SendMessage(
+                chatId: chatId,
+                text: "🔗 Как привязать аккаунт:\n\n" +
+                      "1. Зарегистрируйся на сайте\n" +
+                      "2. Зайди в свой профиль\n" +
+                      "3. Нажми «Привязать Telegram»\n" +
+                      "4. Перейди по ссылке — и готово!\n\n" +
+                      "После привязки сможешь отправлять решения задач.",
                 cancellationToken: cancellationToken
             );
         }

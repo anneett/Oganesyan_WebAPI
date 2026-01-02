@@ -8,6 +8,14 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
         private readonly CommandHandler _commandHandler;
         private readonly ILogger<MessageHandler> _logger;
 
+        private static readonly HashSet<string> ButtonTexts = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "📝 Задания",
+            "📊 Статус",
+            "❓ Помощь",
+            "🔗 Как привязать?"
+        };
+
         public MessageHandler(CommandHandler commandHandler, ILogger<MessageHandler> logger)
         {
             _commandHandler = commandHandler;
@@ -28,7 +36,8 @@ namespace Oganesyan_WebAPI.TgBot.Handlers
 
             _logger.LogInformation("Сообщение от {UserName}: {Text}", userName, text);
 
-            if (text.StartsWith("/")) {
+            if (text.StartsWith("/") || ButtonTexts.Contains(text))
+            {
                 await _commandHandler.HandleAsync(telegramBotClient, message, cancellationToken);
             }
             else
