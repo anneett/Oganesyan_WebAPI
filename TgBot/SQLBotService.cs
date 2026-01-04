@@ -39,7 +39,7 @@ namespace Oganesyan_WebAPI.TgBot
             await Task.Delay(Timeout.Infinite, cancellationToken);
         }
 
-        private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        private async Task HandleUpdateAsync(ITelegramBotClient telegramBotClient, Update update, CancellationToken cancellationToken)
         {
             using var scope = _serviceProvider.CreateScope();
 
@@ -52,14 +52,14 @@ namespace Oganesyan_WebAPI.TgBot
                     case UpdateType.Message:
                         {
                             var messageHandler = scope.ServiceProvider.GetRequiredService<MessageHandler>();
-                            await messageHandler.HandleAsync(botClient, update.Message!, cancellationToken);
+                            await messageHandler.HandleAsync(telegramBotClient, update.Message!, cancellationToken);
                             break;
                         }
 
                     case UpdateType.CallbackQuery:
                         {
                             var callbackHandler = scope.ServiceProvider.GetRequiredService<CallbackHandler>();
-                            await callbackHandler.HandleAsync(botClient, update.CallbackQuery!, cancellationToken);
+                            await callbackHandler.HandleAsync(telegramBotClient, update.CallbackQuery!, cancellationToken);
                             break;
                         }
                 }
@@ -70,10 +70,7 @@ namespace Oganesyan_WebAPI.TgBot
             }
         }
 
-        private Task HandleErrorAsync(
-            ITelegramBotClient botClient,
-            Exception exception,
-            CancellationToken cancellationToken)
+        private Task HandleErrorAsync(ITelegramBotClient telegramBotClient, Exception exception, CancellationToken cancellationToken)
         {
             _logger.LogError(exception, "Ошибка Telegram Bot API");
             return Task.CompletedTask;
