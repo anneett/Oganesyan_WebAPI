@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.Host;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
@@ -26,6 +27,7 @@ namespace Oganesyan_WebAPI.Services
             {
                 Title = exerciseCreateDto.Title,
                 Difficulty = exerciseCreateDto.Difficulty,
+                DatabaseMetaId = exerciseCreateDto.DatabaseMetaId,
                 CorrectAnswer = exerciseCreateDto.CorrectAnswer
             };
 

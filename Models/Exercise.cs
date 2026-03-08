@@ -21,11 +21,10 @@ namespace Oganesyan_WebAPI.Models
         public ExerciseDifficulty Difficulty { get; set; }
 
         [Required]
-        public string CorrectAnswer { get; set; } = string.Empty;
+        public int DatabaseMetaId { get; set; }
+        public DatabaseMeta? DatabaseMeta { get; set; }
 
-        public bool CheckAnswer(string userAnswer)
-        {
-            return string.Equals(userAnswer.Trim(), CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
-        }
+        [Required]
+        public string CorrectAnswer { get; set; } = string.Empty;
     }
 }

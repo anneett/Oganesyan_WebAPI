@@ -14,6 +14,9 @@ namespace Oganesyan_WebAPI.DTOs
         public ExerciseDifficulty Difficulty { get; set; }
 
         [Required]
+        public int DatabaseMetaId { get; set; }
+
+        [Required]
         public string CorrectAnswer { get; set; } = string.Empty;
     }
 }

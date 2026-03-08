@@ -17,6 +17,66 @@ namespace Oganesyan_WebAPI.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
 
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.DatabaseDeployment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DatabaseMetaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DbMetaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DeployedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeployed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PhysicaDatabaseName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DbMetaId");
+
+                    b.HasIndex("DatabaseMetaId", "DbMetaId")
+                        .IsUnique();
+
+                    b.ToTable("DatabaseDeployments");
+                });
+
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.DatabaseMeta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CreateScriptTemplate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErdImagePath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LogicalName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DatabaseMetas");
+                });
+
             modelBuilder.Entity("Oganesyan_WebAPI.Models.DbMeta", b =>
                 {
                     b.Property<int>("Id")
@@ -38,7 +98,10 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Meta");
+                    b.HasIndex("dbType")
+                        .IsUnique();
+
+                    b.ToTable("DbMetas");
                 });
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Exercise", b =>
@@ -51,6 +114,9 @@ namespace Oganesyan_WebAPI.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("DatabaseMetaId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Difficulty")
                         .HasColumnType("INTEGER");
 
@@ -60,6 +126,8 @@ namespace Oganesyan_WebAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DatabaseMetaId");
 
                     b.HasIndex("Title")
                         .IsUnique();
@@ -153,6 +221,36 @@ namespace Oganesyan_WebAPI.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.DatabaseDeployment", b =>
+                {
+                    b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
+                        .WithMany("Deployments")
+                        .HasForeignKey("DatabaseMetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Oganesyan_WebAPI.Models.DbMeta", "DbMeta")
+                        .WithMany()
+                        .HasForeignKey("DbMetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DatabaseMeta");
+
+                    b.Navigation("DbMeta");
+                });
+
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.Exercise", b =>
+                {
+                    b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
+                        .WithMany()
+                        .HasForeignKey("DatabaseMetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DatabaseMeta");
+                });
+
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Solution", b =>
                 {
                     b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
@@ -162,6 +260,11 @@ namespace Oganesyan_WebAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Exercise");
+                });
+
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.DatabaseMeta", b =>
+                {
+                    b.Navigation("Deployments");
                 });
 #pragma warning restore 612, 618
         }

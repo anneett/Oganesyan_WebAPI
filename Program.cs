@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
 using Oganesyan_WebAPI.TgBot;
 using Oganesyan_WebAPI.TgBot.Handlers;
+using System.Data.Common;
 using System.Text;
 using Telegram.Bot;
 
@@ -20,6 +22,9 @@ builder.Configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("SQLiteConnection")
                       ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
+
+DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
+
 
 var authOptions = builder.Configuration.GetSection("JwtSettings").Get<AuthOptions>()
                   ?? throw new InvalidOperationException("JwtSettings section is missing.");
@@ -56,6 +61,11 @@ builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<SolutionService>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<QueryExecutionService>();
+builder.Services.AddScoped<DbMetaService>();
+builder.Services.AddScoped<DatabaseMetaService>();
+builder.Services.AddScoped<DatabaseDeploymentService>();
 
 builder.Services.AddScoped<MessageHandler>();
 builder.Services.AddScoped<CallbackHandler>();
