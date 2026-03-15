@@ -14,13 +14,13 @@ namespace Oganesyan_WebAPI.Services
             _context = context;
         }
 
-        //public async Task<List<DatabaseDeployment>> GetDeploymentsByIdAsync(int databaseMetaId)
-        //{
-        //    return await _context.DatabaseDeployments
-        //        .Include(d => d.DbMeta)
-        //        .Where(d => d.DatabaseMetaId == databaseMetaId)
-        //        .ToListAsync();
-        //}
+        public async Task<List<DatabaseDeployment>> GetDeploymentsByMetaIdAsync(int databaseMetaId)
+        {
+            return await _context.DatabaseDeployments
+                .Include(d => d.DbMeta)
+                .Where(d => d.DatabaseMetaId == databaseMetaId)
+                .ToListAsync();
+        }
 
         public async Task<DatabaseDeployment> DeployDatabaseAsync(int databaseMetaId, DatabaseDeployDto dto)
         {
@@ -40,12 +40,14 @@ namespace Oganesyan_WebAPI.Services
 
             bool deployed = false;
 
-            if (dto.ExecuteScript &&!string.IsNullOrEmpty(logicalDb.CreateScriptTemplate))
+            if (dto.ExecuteScript && !string.IsNullOrEmpty(logicalDb.CreateScriptTemplate))
             {
                 await CreatePhysicalDatabase(dbMeta, dto.PhysicalDatabaseName);
                 string adaptedScript = AdaptSqlScript(logicalDb.CreateScriptTemplate, dbMeta.dbType);
 
                 await ExecuteScriptOnDatabase(dbMeta, dto.PhysicalDatabaseName, adaptedScript);
+            
+                deployed = true;
             }
 
             var deployment = new DatabaseDeployment
@@ -63,26 +65,11 @@ namespace Oganesyan_WebAPI.Services
             return deployment;
         }
 
-        // Больше не надо???
-
-        //public string GenerateConnectionString(DbMeta dbMeta, string physicalDbName)
-        //{
-        //    return dbMeta.dbType switch
-        //    {
-        //        "PostgreSQL" => ReplaceOrAddDatabase(dbMeta.ConnectionString, "Database", physicalDbName),
-        //        "MySQL" => ReplaceOrAddDatabase(dbMeta.ConnectionString, "Database", physicalDbName),
-        //        "MS SQL Server" => ReplaceOrAddDatabase(dbMeta.ConnectionString, "Database", physicalDbName),
-        //        "SQLite" => $"Data Source={physicalDbName}.db",
-        //        _ => throw new NotSupportedException($"СУБД {dbMeta.dbType} не поддерживается")
-        //    };
-        //}
-
-        /////////////////////////////////////////
         private async Task CreatePhysicalDatabase(DbMeta dbMeta, string databaseName)
         {
             var factory = DbProviderFactories.GetFactory(dbMeta.Provider!);
             using var connection = factory.CreateConnection()!;
-            connection.ConnectionString = dbMeta.ConnectionString;
+            connection.ConnectionString = GetServerConnectionString(dbMeta);
 
             await connection.OpenAsync();
 
@@ -103,7 +90,7 @@ namespace Oganesyan_WebAPI.Services
         {
             var factory = DbProviderFactories.GetFactory(dbMeta.Provider!);
             using var connection = factory.CreateConnection()!;
-            connection.ConnectionString = AddDatabaseToConnectionString(dbMeta.ConnectionString, dbMeta.dbType, databaseName);
+            connection.ConnectionString = AddDatabaseToConnectionString(dbMeta.ConnectionString, databaseName);
 
             await connection.OpenAsync();
 
@@ -150,29 +137,20 @@ namespace Oganesyan_WebAPI.Services
         {
             return dbMeta.dbType switch
             {
-                "PostgreSQL" => AddDatabaseToConnectionString(dbMeta.ConnectionString, dbMeta.dbType, "postgres"),
+                "PostgreSQL" => AddDatabaseToConnectionString(dbMeta.ConnectionString, "postgres"),
                 "MySQL" => dbMeta.ConnectionString,
-                "MS SQL Server" => AddDatabaseToConnectionString(dbMeta.ConnectionString, dbMeta.dbType, "master"),
+                "MS SQL Server" => AddDatabaseToConnectionString(dbMeta.ConnectionString, "master"),
                 _ => dbMeta.ConnectionString
             };
         }
 
-        private string AddDatabaseToConnectionString(string connectionString, string dbType, string databaseName)
+        public string AddDatabaseToConnectionString(string connectionString, string databaseName)
         {
             var builder = new DbConnectionStringBuilder
             {
                 ConnectionString = connectionString
             };
-
-            string key = dbType switch
-            {
-                "PostgreSQL" => "Database",
-                "MySQL" => "Database",
-                "MS SQL Server" => "Database",
-                _ => "Database"
-            };
-
-            builder[key] = databaseName;
+            builder["Database"] = databaseName;
             return builder.ConnectionString;
         }
     }

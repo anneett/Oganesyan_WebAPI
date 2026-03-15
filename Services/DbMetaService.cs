@@ -65,6 +65,8 @@ namespace Oganesyan_WebAPI.Services
             }
         }
 
+        // ЕСЛИ АДМИН НЕ БУДЕТ ВВОДИТЬ ГОТОВУЮ СТРОКУ ПОДКЛЮЧЕНИЯ, ТО ЛУЧШЕ ТАК
+        
         //public static string GenerateConnectionString(string dbType, string host, int port, string username, string password)
         //{
         //    return dbType switch
