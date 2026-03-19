@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oganesyan_WebAPI.DTOs;
@@ -22,7 +23,7 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize]
         [HttpPost("add")]
-        public async Task<ActionResult<Solution>> AddSolution(SolutionCreateDto solutionCreateDto)
+        public async Task<IActionResult> AddSolution([FromBody] SolutionCreateDto solutionCreateDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
@@ -30,13 +31,8 @@ namespace Oganesyan_WebAPI.Controllers
                 return Unauthorized();
             }
 
-            var solution = await _solutionService.AddSolution(solutionCreateDto, userId);
-            if (solution == null)
-            {
-                return BadRequest();
-            }
-
-            return CreatedAtAction(nameof(GetSolutionById), new { id = solution.Id }, solution);
+            var result = await _solutionService.AddSolution(solutionCreateDto, userId);
+            return Ok(result);
         }
 
         [Authorize]

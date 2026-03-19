@@ -14,6 +14,10 @@ namespace Oganesyan_WebAPI.Models
         public Exercise Exercise { get; set; } = null!;
 
         [Required]
+        public int DeploymentId { get; set; }
+        public DatabaseDeployment Deployment { get; set; } = null!;
+
+        [Required]
         public string UserAnswer { get; set; } = string.Empty;
 
         [Required]

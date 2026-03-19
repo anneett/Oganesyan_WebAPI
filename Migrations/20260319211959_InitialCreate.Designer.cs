@@ -11,7 +11,7 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260307165422_InitialCreate")]
+    [Migration("20260319211959_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -144,6 +144,9 @@ namespace Oganesyan_WebAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("DeploymentId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ExerciseId")
                         .HasColumnType("INTEGER");
 
@@ -164,6 +167,8 @@ namespace Oganesyan_WebAPI.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeploymentId");
 
                     b.HasIndex("ExerciseId");
 
@@ -256,11 +261,19 @@ namespace Oganesyan_WebAPI.Migrations
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Solution", b =>
                 {
+                    b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "Deployment")
+                        .WithMany()
+                        .HasForeignKey("DeploymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Deployment");
 
                     b.Navigation("Exercise");
                 });

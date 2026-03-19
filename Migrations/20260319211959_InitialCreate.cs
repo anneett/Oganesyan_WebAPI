@@ -125,6 +125,7 @@ namespace Oganesyan_WebAPI.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
                     ExerciseId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DeploymentId = table.Column<int>(type: "INTEGER", nullable: false),
                     UserAnswer = table.Column<string>(type: "TEXT", nullable: false),
                     IsCorrect = table.Column<bool>(type: "INTEGER", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -133,6 +134,12 @@ namespace Oganesyan_WebAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Solutions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Solutions_DatabaseDeployments_DeploymentId",
+                        column: x => x.DeploymentId,
+                        principalTable: "DatabaseDeployments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Solutions_Exercises_ExerciseId",
                         column: x => x.ExerciseId,
@@ -170,6 +177,11 @@ namespace Oganesyan_WebAPI.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Solutions_DeploymentId",
+                table: "Solutions",
+                column: "DeploymentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Solutions_ExerciseId",
                 table: "Solutions",
                 column: "ExerciseId");
@@ -185,19 +197,19 @@ namespace Oganesyan_WebAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "DatabaseDeployments");
-
-            migrationBuilder.DropTable(
                 name: "Solutions");
 
             migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "DbMetas");
+                name: "DatabaseDeployments");
 
             migrationBuilder.DropTable(
                 name: "Exercises");
+
+            migrationBuilder.DropTable(
+                name: "DbMetas");
 
             migrationBuilder.DropTable(
                 name: "DatabaseMetas");

@@ -1,18 +1,22 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Humanizer;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using System.ComponentModel.DataAnnotations;
+using Solution = Oganesyan_WebAPI.Models.Solution;
 
 namespace Oganesyan_WebAPI.Services
 {
     public class SolutionService
     {
         private readonly AppDbContext _context;
-        public SolutionService(AppDbContext context)
+        private readonly QueryExecutionService _queryExecutionService;
+        public SolutionService(AppDbContext context, QueryExecutionService queryExecutionService)
         {
             _context = context;
+            _queryExecutionService = queryExecutionService;
         }
 
         public async Task<Models.Solution?> AddSolution(SolutionCreateDto solutionCreateDto, int userId)
@@ -24,33 +28,27 @@ namespace Oganesyan_WebAPI.Services
             }
 
             if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer))
-                throw new ArgumentException("The answer cannot be empty.");
+                throw new ArgumentException("Ответ не может быть пустым.");
 
-            var solution = new Models.Solution
+            var executeDto = new ExecuteQueryDto
+            {
+                ExerciseId = solutionCreateDto.ExerciseId,
+                UserQuery = solutionCreateDto.UserAnswer,
+                DeploymentId = solutionCreateDto.DeploymentId
+            };
+
+            var result = await _queryExecutionService.CheckSolutionAsync(executeDto);
+
+            var solution = new Solution
             {
                 UserId = userId,
                 ExerciseId = solutionCreateDto.ExerciseId,
+                DeploymentId = solutionCreateDto.DeploymentId,
                 UserAnswer = solutionCreateDto.UserAnswer,
-                SubmittedAt = DateTime.UtcNow
+                IsCorrect = result.IsCorrect,
+                SubmittedAt = DateTime.UtcNow,
+                Result = result.Message
             };
-
-            try
-            {
-                solution.IsCorrect = exercise.CheckAnswer(solutionCreateDto.UserAnswer);
-                if (solution.IsCorrect)
-                {
-                    solution.Result = "OK";
-                }
-                else
-                {
-                    solution.Result = $"WrongAnswer: expected {exercise.CorrectAnswer}, got {solution.UserAnswer}";
-                }
-            }
-            catch (Exception ex)
-            {
-                solution.IsCorrect = false;
-                solution.Result = $"Error: {ex.Message}";
-            }
 
             _context.Solutions.Add(solution);
             await _context.SaveChangesAsync();

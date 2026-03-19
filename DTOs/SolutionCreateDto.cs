@@ -9,5 +9,7 @@ namespace Oganesyan_WebAPI.DTOs
         public int ExerciseId { get; set; }
         [Required]
         public string UserAnswer { get; set; } = string.Empty;
+        [Required]
+        public int DeploymentId { get; set; }
     }
 }
