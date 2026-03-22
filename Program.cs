@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using MySqlConnector;
+using Microsoft.Data.SqlClient;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
@@ -25,6 +28,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                       ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
 
 DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
+DbProviderFactories.RegisterFactory("MySqlConnector", MySqlConnectorFactory.Instance);
+DbProviderFactories.RegisterFactory("Microsoft.Data.SqlClient", SqlClientFactory.Instance);
+DbProviderFactories.RegisterFactory("Microsoft.Data.Sqlite", SqliteFactory.Instance);
 
 
 var authOptions = builder.Configuration.GetSection("JwtSettings").Get<AuthOptions>()
@@ -72,7 +78,12 @@ builder.Services.AddScoped<MessageHandler>();
 builder.Services.AddScoped<CallbackHandler>();
 builder.Services.AddScoped<CommandHandler>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
