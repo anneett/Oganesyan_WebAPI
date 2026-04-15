@@ -32,6 +32,11 @@ namespace Oganesyan_WebAPI.Controllers
             }
 
             var result = await _solutionService.AddSolution(solutionCreateDto, userId);
+
+            if (result == null)
+            {
+                return BadRequest(new { message = "Ошибка при создании решения" });
+            }
             return Ok(result);
         }
 

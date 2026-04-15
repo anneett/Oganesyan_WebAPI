@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Oganesyan_WebAPI.Data;
 
@@ -10,9 +11,11 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260415170017_RemoveTelegram")]
+    partial class RemoveTelegram
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -104,95 +107,6 @@ namespace Oganesyan_WebAPI.Migrations
                     b.ToTable("DbMetas");
                 });
 
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.Exam", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DatabaseMetaId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsResultsReleased")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DatabaseMetaId");
-
-                    b.ToTable("Exams");
-                });
-
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAttempt", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ExamId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("FinishedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SelectedDeploymentId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("StartedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExamId");
-
-                    b.HasIndex("SelectedDeploymentId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ExamAttempts");
-                });
-
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAvailableDeployment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DatabaseDeploymentId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ExamId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DatabaseDeploymentId");
-
-                    b.HasIndex("ExamId");
-
-                    b.ToTable("ExamAvailableDeployments");
-                });
-
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Exercise", b =>
                 {
                     b.Property<int>("Id")
@@ -233,9 +147,6 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Property<int>("DeploymentId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ExamId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("ExerciseId")
                         .HasColumnType("INTEGER");
 
@@ -258,8 +169,6 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DeploymentId");
-
-                    b.HasIndex("ExamId");
 
                     b.HasIndex("ExerciseId");
 
@@ -329,63 +238,6 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Navigation("DbMeta");
                 });
 
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.Exam", b =>
-                {
-                    b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
-                        .WithMany()
-                        .HasForeignKey("DatabaseMetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DatabaseMeta");
-                });
-
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAttempt", b =>
-                {
-                    b.HasOne("Oganesyan_WebAPI.Models.Exam", "Exam")
-                        .WithMany()
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "SelectedDeployment")
-                        .WithMany()
-                        .HasForeignKey("SelectedDeploymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Oganesyan_WebAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exam");
-
-                    b.Navigation("SelectedDeployment");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAvailableDeployment", b =>
-                {
-                    b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "DatabaseDeployment")
-                        .WithMany()
-                        .HasForeignKey("DatabaseDeploymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Oganesyan_WebAPI.Models.Exam", "Exam")
-                        .WithMany("AvailableDeployments")
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DatabaseDeployment");
-
-                    b.Navigation("Exam");
-                });
-
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Exercise", b =>
                 {
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
@@ -405,10 +257,6 @@ namespace Oganesyan_WebAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Oganesyan_WebAPI.Models.Exam", "Exam")
-                        .WithMany()
-                        .HasForeignKey("ExamId");
-
                     b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
@@ -417,19 +265,12 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Navigation("Deployment");
 
-                    b.Navigation("Exam");
-
                     b.Navigation("Exercise");
                 });
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.DatabaseMeta", b =>
                 {
                     b.Navigation("Deployments");
-                });
-
-            modelBuilder.Entity("Oganesyan_WebAPI.Models.Exam", b =>
-                {
-                    b.Navigation("AvailableDeployments");
                 });
 #pragma warning restore 612, 618
         }

@@ -15,6 +15,9 @@ namespace Oganesyan_WebAPI.Data
         public DbSet<Oganesyan_WebAPI.Models.DbMeta> DbMetas { get; set; }
         public DbSet<Oganesyan_WebAPI.Models.DatabaseMeta> DatabaseMetas { get; set; }
         public DbSet<Oganesyan_WebAPI.Models.DatabaseDeployment> DatabaseDeployments { get; set; }
+        public DbSet<Oganesyan_WebAPI.Models.Exam> Exams { get; set; }
+        public DbSet<Oganesyan_WebAPI.Models.ExamAvailableDeployment> ExamAvailableDeployments { get; set; }
+        public DbSet<Oganesyan_WebAPI.Models.ExamAttempt> ExamAttempts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +38,16 @@ namespace Oganesyan_WebAPI.Data
             modelBuilder.Entity<DatabaseDeployment>()
                 .HasIndex(d => new { d.DatabaseMetaId, d.DbMetaId })
                 .IsUnique();
+
+            modelBuilder.Entity<ExamAvailableDeployment>()
+                .HasOne(e => e.Exam)
+                .WithMany(ex => ex.AvailableDeployments)
+                .HasForeignKey(e => e.ExamId);
+
+            modelBuilder.Entity<ExamAttempt>()
+                .HasOne(e => e.Exam)
+                .WithMany()
+                .HasForeignKey(e => e.ExamId);
         }
     }
 }

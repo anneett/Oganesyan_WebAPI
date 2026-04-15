@@ -13,13 +13,16 @@ namespace Oganesyan_WebAPI.Services
     {
         private readonly AppDbContext _context;
         private readonly QueryExecutionService _queryExecutionService;
-        public SolutionService(AppDbContext context, QueryExecutionService queryExecutionService)
+        private readonly ExamService _examService;
+
+        public SolutionService(AppDbContext context, QueryExecutionService queryExecutionService, ExamService examService)
         {
             _context = context;
             _queryExecutionService = queryExecutionService;
+            _examService = examService;
         }
 
-        public async Task<Models.Solution?> AddSolution(SolutionCreateDto solutionCreateDto, int userId)
+        public async Task<QueryResultDto?> AddSolution(SolutionCreateDto solutionCreateDto, int userId)
         {
             var exercise = await _context.Exercises.FindAsync(solutionCreateDto.ExerciseId);
             if (exercise == null)
@@ -29,6 +32,12 @@ namespace Oganesyan_WebAPI.Services
 
             if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer))
                 throw new ArgumentException("Ответ не может быть пустым.");
+            
+            if (solutionCreateDto.ExamId.HasValue)
+            {
+                var isValid = await _examService.IsAttemptValidAsync(userId, solutionCreateDto.ExamId.Value);
+                if (!isValid) throw new InvalidOperationException("Время контрольной работы истекло или работа не начата.");
+            }
 
             var executeDto = new ExecuteQueryDto
             {
@@ -44,6 +53,7 @@ namespace Oganesyan_WebAPI.Services
                 UserId = userId,
                 ExerciseId = solutionCreateDto.ExerciseId,
                 DeploymentId = solutionCreateDto.DeploymentId,
+                ExamId = solutionCreateDto.ExamId,
                 UserAnswer = solutionCreateDto.UserAnswer,
                 IsCorrect = result.IsCorrect,
                 SubmittedAt = DateTime.UtcNow,
@@ -53,7 +63,26 @@ namespace Oganesyan_WebAPI.Services
             _context.Solutions.Add(solution);
             await _context.SaveChangesAsync();
 
-            return solution;
+            if (solution.ExamId.HasValue)
+            {
+                var exam = await _context.Exams.FindAsync(solution.ExamId.Value);
+                if (exam != null && !exam.IsResultsReleased)
+                {
+                    return new QueryResultDto
+                    {
+                        IsCorrect = false,
+                        Message = "Ответ принят и сохранен. Результаты позже.",
+                        UserRowCount = result.UserRowCount,
+                        UserColumnCount = result.UserColumnCount,
+                        ColumnNames = result.ColumnNames,
+                        UserRows = result.UserRows,
+                        ReferenceRows = new List<List<string>>(),
+                        ReferenceRowCount = 0
+                    };
+                }
+            }
+
+            return result;
         }
         public async Task<Models.Solution?> GetSolutionById(int id)
         {

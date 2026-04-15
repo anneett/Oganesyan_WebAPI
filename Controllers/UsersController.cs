@@ -149,51 +149,6 @@ namespace Oganesyan_WebAPI.Controllers
             return NoContent();
         }
 
-        [Authorize]
-        [HttpPost("telegram/generate-link")]
-        public async Task<ActionResult<object>> GenerateTelegramLink()
-        {
-            try
-            {
-                int userId = _userService.GetUserId();
-                var user = await _userService.GetUserById(userId);
-
-                if (user == null)
-                    return NotFound();
-
-                if (user.TelegramChatId != null)
-                {
-                    return BadRequest();
-                }
-
-                var code = await _userService.GenerateTelegramLinkCodeAsync(userId);
-                var botUsername = _configuration["TelegramBot:BotUsername"];
-
-                return Ok(new
-                {
-                    deepLink = $"https://t.me/{botUsername}?start={code}",
-                    expiresInMinutes = 10
-                });
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
-        }
-
-        [Authorize]
-        [HttpDelete("telegram/unlink")]
-        public async Task<IActionResult> UnlinkTelegram()
-        {
-            int userId = _userService.GetUserId();
-            var success = await _userService.UnlinkTelegramAsync(userId);
-
-            if (!success)
-                return NotFound();
-
-            return NoContent();
-        }
-
         //[Authorize(Roles = "admin")]
         //[HttpPut("update/{id}")]
         //public async Task<IActionResult> UpdateUserById(int id, [FromBody] UserUpdateDto userUpdateDto)

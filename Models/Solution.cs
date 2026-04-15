@@ -16,6 +16,8 @@ namespace Oganesyan_WebAPI.Models
         [Required]
         public int DeploymentId { get; set; }
         public DatabaseDeployment Deployment { get; set; } = null!;
+        public int? ExamId { get; set; }
+        public Exam? Exam { get; set; }
 
         [Required]
         public string UserAnswer { get; set; } = string.Empty;

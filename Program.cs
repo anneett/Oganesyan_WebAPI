@@ -11,8 +11,6 @@ using Microsoft.Data.SqlClient;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
-using Oganesyan_WebAPI.TgBot;
-using Oganesyan_WebAPI.TgBot.Handlers;
 using System.Data.Common;
 using System.Text;
 using Telegram.Bot;
@@ -73,10 +71,7 @@ builder.Services.AddScoped<QueryExecutionService>();
 builder.Services.AddScoped<DbMetaService>();
 builder.Services.AddScoped<DatabaseMetaService>();
 builder.Services.AddScoped<DatabaseDeploymentService>();
-
-builder.Services.AddScoped<MessageHandler>();
-builder.Services.AddScoped<CallbackHandler>();
-builder.Services.AddScoped<CommandHandler>();
+builder.Services.AddScoped<ExamService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -87,13 +82,6 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<ITelegramBotClient>(sp =>
-{
-    var token = builder.Configuration["TelegramBot:Token"]
-        ?? throw new InvalidOperationException("Telegram bot token not found");
-    return new TelegramBotClient(token);
-});
-builder.Services.AddHostedService<SQLBotService>();
 
 builder.Services.AddSwaggerGen(c =>
 {

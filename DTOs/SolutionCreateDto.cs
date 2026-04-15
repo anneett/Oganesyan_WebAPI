@@ -11,5 +11,7 @@ namespace Oganesyan_WebAPI.DTOs
         public string UserAnswer { get; set; } = string.Empty;
         [Required]
         public int DeploymentId { get; set; }
+        public int? ExamId { get; set; }
+        public Exam? Exam { get; set; }
     }
 }

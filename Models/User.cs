@@ -34,15 +34,6 @@ namespace Oganesyan_WebAPI.Models
         [JsonIgnore]
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
-        public long? TelegramChatId { get; set; }
-
-        [JsonIgnore]
-        [MaxLength(10)]
-        public string? TelegramLinkCode { get; set; }
-
-        [JsonIgnore]
-        public DateTime? TelegramLinkCodeExpiry { get; set; }
-
         public void SetPassword(string frontendHash)
         {
             var saltBytes = RandomNumberGenerator.GetBytes(16);
