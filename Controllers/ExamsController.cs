@@ -5,6 +5,8 @@ using Oganesyan_WebAPI.Services;
 
 namespace Oganesyan_WebAPI.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ExamsController : ControllerBase
     {
         private readonly ExamService _examService;
@@ -44,6 +46,42 @@ namespace Oganesyan_WebAPI.Controllers
         {
             await _examService.ReleaseResultsAsync(id);
             return NoContent();
+        }
+
+        [Authorize]
+        [HttpPost("finish/{examId}")]
+        public async Task<IActionResult> FinishExam(int examId)
+        {
+            var userId = _userService.GetUserId();
+
+            var success = await _examService.FinishExamAsync(userId, examId);
+
+            if (!success)
+                return NotFound("Попытка не найдена");
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpGet("{examId}/my-results")]
+        public async Task<IActionResult> GetMyResults(int examId)
+        {
+            var userId = _userService.GetUserId();
+
+            var result = await _examService.GetMyResultsAsync(userId, examId);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("{examId}/attempts")]
+        public async Task<IActionResult> GetAttempts(int examId)
+        {
+            var result = await _examService.GetAttemptsAsync(examId);
+            return Ok(result);
         }
     }
 }

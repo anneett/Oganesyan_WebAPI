@@ -65,19 +65,29 @@ namespace Oganesyan_WebAPI.Services
 
             if (solution.ExamId.HasValue)
             {
+                var attempt = await _context.ExamAttempts
+                    .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == solutionCreateDto.ExamId.Value);
+
+                if (attempt == null)
+                    throw new InvalidOperationException("Попытка не найдена. Сначала начните экзамен.");
+
+                if (attempt.SelectedDeploymentId != solutionCreateDto.DeploymentId)
+                    throw new InvalidOperationException("Используйте развертывание, выбранное при начале экзамена");
+
+                var isValid = await _examService.IsAttemptValidAsync(userId, solutionCreateDto.ExamId.Value);
+                if (!isValid)
+                    throw new InvalidOperationException("Время контрольной работы истекло или работа не начата.");
+
                 var exam = await _context.Exams.FindAsync(solution.ExamId.Value);
                 if (exam != null && !exam.IsResultsReleased)
                 {
                     return new QueryResultDto
                     {
-                        IsCorrect = false,
-                        Message = "Ответ принят и сохранен. Результаты позже.",
+                        Message = "Ответ принят и сохранен. Результаты будут доступны после проверки.",
                         UserRowCount = result.UserRowCount,
                         UserColumnCount = result.UserColumnCount,
                         ColumnNames = result.ColumnNames,
-                        UserRows = result.UserRows,
-                        ReferenceRows = new List<List<string>>(),
-                        ReferenceRowCount = 0
+                        UserRows = result.UserRows
                     };
                 }
             }
