@@ -32,11 +32,21 @@ namespace Oganesyan_WebAPI.Services
 
             if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer))
                 throw new ArgumentException("Ответ не может быть пустым.");
-            
+
             if (solutionCreateDto.ExamId.HasValue)
             {
-                var isValid = await _examService.IsAttemptValidAsync(userId, solutionCreateDto.ExamId.Value);
-                if (!isValid) throw new InvalidOperationException("Время контрольной работы истекло или работа не начата.");
+                var attempt = await _context.ExamAttempts
+                    .Include(a => a.Exam)
+                    .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == solutionCreateDto.ExamId.Value);
+
+                if (attempt == null)
+                    throw new InvalidOperationException("Попытка не найдена. Сначала начните экзамен.");
+
+                if (attempt.FinishedAt != null)
+                    throw new InvalidOperationException("Контрольная работа уже завершена.");
+
+                if (attempt.SelectedDeploymentId != solutionCreateDto.DeploymentId)
+                    throw new InvalidOperationException("Используйте развертывание, выбранное при начале экзамена");
             }
 
             var executeDto = new ExecuteQueryDto
@@ -65,19 +75,6 @@ namespace Oganesyan_WebAPI.Services
 
             if (solution.ExamId.HasValue)
             {
-                var attempt = await _context.ExamAttempts
-                    .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == solutionCreateDto.ExamId.Value);
-
-                if (attempt == null)
-                    throw new InvalidOperationException("Попытка не найдена. Сначала начните экзамен.");
-
-                if (attempt.SelectedDeploymentId != solutionCreateDto.DeploymentId)
-                    throw new InvalidOperationException("Используйте развертывание, выбранное при начале экзамена");
-
-                var isValid = await _examService.IsAttemptValidAsync(userId, solutionCreateDto.ExamId.Value);
-                if (!isValid)
-                    throw new InvalidOperationException("Время контрольной работы истекло или работа не начата.");
-
                 var exam = await _context.Exams.FindAsync(solution.ExamId.Value);
                 if (exam != null && !exam.IsResultsReleased)
                 {
@@ -87,7 +84,8 @@ namespace Oganesyan_WebAPI.Services
                         UserRowCount = result.UserRowCount,
                         UserColumnCount = result.UserColumnCount,
                         ColumnNames = result.ColumnNames,
-                        UserRows = result.UserRows
+                        UserRows = result.UserRows,
+                        ReferenceRows = new List<List<string>>()
                     };
                 }
             }

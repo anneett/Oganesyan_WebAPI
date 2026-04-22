@@ -214,5 +214,33 @@ namespace Oganesyan_WebAPI.Services
                     .ToList())
                 .ToList();
         }
+
+        public async Task<QueryResultDto> ExecuteQueryForTestAsync(DatabaseDeployment deployment, string query)
+        {
+            string connectionString = _databaseDeploymentService.AddDatabaseToConnectionString(
+                deployment.DbMeta!.ConnectionString,
+                deployment.PhysicaDatabaseName
+            );
+
+            try
+            {
+                var result = await ExecuteQueryAsync(deployment.DbMeta.Provider!, connectionString, query);
+
+                return new QueryResultDto
+                {
+                    IsCorrect = true,
+                    Message = "Запрос выполнен успешно",
+                    UserRowCount = result.Rows.Count,
+                    UserColumnCount = result.Columns.Count,
+                    ColumnNames = GetColumnNames(result),
+                    UserRows = DataTableToList(result),
+                    ReferenceRows = new List<List<string>>()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Ошибка выполнения: {ex.Message}");
+            }
+        }
     }
 }

@@ -6,6 +6,8 @@
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int DurationMinutes { get; set; }
+        public int DatabaseMetaId { get; set; }
+        public int? MaxAttempts { get; set; }
         public bool IsActive { get; set; }
         public bool IsResultsReleased { get; set; }
         public string LogicalDbName { get; set; } = string.Empty;

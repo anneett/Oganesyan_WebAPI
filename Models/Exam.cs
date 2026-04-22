@@ -16,6 +16,7 @@ namespace Oganesyan_WebAPI.Models
 
         [Required]
         public int DurationMinutes { get; set; }
+        public int? MaxAttempts { get; set; }
 
         [Required]
         public bool IsActive { get; set; } = true;

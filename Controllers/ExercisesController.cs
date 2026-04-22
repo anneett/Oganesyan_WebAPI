@@ -58,5 +58,20 @@ namespace Oganesyan_WebAPI.Controllers
         {
             return await _exerciseService.GetExerciseStatsById(id);
         }
+
+        [Authorize(Roles = "admin")]
+        [HttpPost("test-query")]
+        public async Task<ActionResult<QueryResultDto>> TestQuery([FromBody] TestQueryDto dto)
+        {
+            try
+            {
+                var result = await _exerciseService.TestQueryAsync(dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

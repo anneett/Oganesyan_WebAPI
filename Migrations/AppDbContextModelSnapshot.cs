@@ -129,6 +129,9 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Property<bool>("IsResultsReleased")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("MaxAttempts")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -167,7 +170,8 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.HasIndex("SelectedDeploymentId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "ExamId")
+                        .IsUnique();
 
                     b.ToTable("ExamAttempts");
                 });

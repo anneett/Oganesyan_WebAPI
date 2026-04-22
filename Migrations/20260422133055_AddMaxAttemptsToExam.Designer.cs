@@ -11,8 +11,8 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260415181532_AddExamSystem")]
-    partial class AddExamSystem
+    [Migration("20260422133055_AddMaxAttemptsToExam")]
+    partial class AddMaxAttemptsToExam
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -132,6 +132,9 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Property<bool>("IsResultsReleased")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("MaxAttempts")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -170,7 +173,8 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.HasIndex("SelectedDeploymentId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "ExamId")
+                        .IsUnique();
 
                     b.ToTable("ExamAttempts");
                 });

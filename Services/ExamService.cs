@@ -32,6 +32,7 @@ namespace Oganesyan_WebAPI.Services
                 Description = dto.Description,
                 DatabaseMetaId = dto.DatabaseMetaId,
                 DurationMinutes = dto.DurationMinutes,
+                MaxAttempts = dto.MaxAttempts,
                 IsActive = true,
                 IsResultsReleased = false
             };
@@ -56,6 +57,10 @@ namespace Oganesyan_WebAPI.Services
                     Title = e.Title,
                     Description = e.Description,
                     DurationMinutes = e.DurationMinutes,
+                    DatabaseMetaId = e.DatabaseMetaId,
+                    MaxAttempts = e.MaxAttempts,
+                    IsActive = e.IsActive,
+                    IsResultsReleased = e.IsResultsReleased,
                     LogicalDbName = e.DatabaseMeta!.LogicalName,
                     AvailablePlatforms = e.AvailableDeployments.Select(ad => new DeploymentInfoDto
                     {
@@ -68,11 +73,6 @@ namespace Oganesyan_WebAPI.Services
 
         public async Task<ExamAttempt> StartAttemptAsync(int userId, ExamStartDto dto)
         {
-            var existing = await _context.ExamAttempts
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == dto.ExamId);
-
-            if (existing != null) return existing;
-
             var exam = await _context.Exams
                 .Include(e => e.AvailableDeployments)
                 .FirstOrDefaultAsync(e => e.Id == dto.ExamId && e.IsActive);
@@ -82,6 +82,19 @@ namespace Oganesyan_WebAPI.Services
 
             if (!exam.AvailableDeployments.Any(ad => ad.DatabaseDeploymentId == dto.DeploymentId))
                 throw new InvalidOperationException("Выбранное развертывание недоступно для этого экзамена");
+
+            var completedAttempts = await _context.ExamAttempts
+                .Where(a => a.UserId == userId && a.ExamId == dto.ExamId && a.FinishedAt != null)
+                .CountAsync();
+
+            if (exam.MaxAttempts.HasValue && completedAttempts >= exam.MaxAttempts.Value)
+                throw new InvalidOperationException($"Вы исчерпали все попытки ({exam.MaxAttempts.Value})");
+
+            var unfinished = await _context.ExamAttempts
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == dto.ExamId && a.FinishedAt == null);
+
+            if (unfinished != null)
+                return unfinished;
 
             var attempt = new ExamAttempt
             {
@@ -96,6 +109,30 @@ namespace Oganesyan_WebAPI.Services
             return attempt;
         }
 
+        public async Task<object> GetUserExamInfoAsync(int userId, int examId)
+        {
+            var exam = await _context.Exams.FindAsync(examId);
+            if (exam == null) return null!;
+
+            var attempts = await _context.ExamAttempts
+                .Where(a => a.UserId == userId && a.ExamId == examId)
+                .OrderByDescending(a => a.StartedAt)
+                .ToListAsync();
+
+            var completedCount = attempts.Count(a => a.FinishedAt != null);
+            var hasUnfinished = attempts.Any(a => a.FinishedAt == null);
+
+            return new
+            {
+                ExamId = examId,
+                MaxAttempts = exam.MaxAttempts,
+                CompletedAttempts = completedCount,
+                RemainingAttempts = exam.MaxAttempts.HasValue ? exam.MaxAttempts.Value - completedCount : (int?)null,
+                HasUnfinishedAttempt = hasUnfinished,
+                CanStart = !exam.MaxAttempts.HasValue || completedCount < exam.MaxAttempts.Value || hasUnfinished
+            };
+        }
+
         public async Task<bool> IsAttemptValidAsync(int userId, int examId)
         {
             var attempt = await _context.ExamAttempts
@@ -103,6 +140,7 @@ namespace Oganesyan_WebAPI.Services
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == examId);
 
             if (attempt == null) return false;
+
             if (attempt.FinishedAt != null) return false;
 
             var endTime = attempt.StartedAt.AddMinutes(attempt.Exam!.DurationMinutes);
@@ -121,6 +159,7 @@ namespace Oganesyan_WebAPI.Services
         public async Task<bool> FinishExamAsync(int userId, int examId)
         {
             var attempt = await _context.ExamAttempts
+                .Include(a => a.Exam)
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == examId);
 
             if (attempt == null)

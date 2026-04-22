@@ -56,14 +56,36 @@ namespace Oganesyan_WebAPI.Migrations
                     IsAdmin = table.Column<bool>(type: "INTEGER", nullable: false),
                     InArchive = table.Column<bool>(type: "INTEGER", nullable: false),
                     RefreshToken = table.Column<string>(type: "TEXT", nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    TelegramChatId = table.Column<long>(type: "INTEGER", nullable: true),
-                    TelegramLinkCode = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
-                    TelegramLinkCodeExpiry = table.Column<DateTime>(type: "TEXT", nullable: true)
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Exams",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Title = table.Column<string>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: false),
+                    DatabaseMetaId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DurationMinutes = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsResultsReleased = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Exams", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Exams_DatabaseMetas_DatabaseMetaId",
+                        column: x => x.DatabaseMetaId,
+                        principalTable: "DatabaseMetas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -118,6 +140,67 @@ namespace Oganesyan_WebAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ExamAttempts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ExamId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SelectedDeploymentId = table.Column<int>(type: "INTEGER", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    FinishedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExamAttempts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExamAttempts_DatabaseDeployments_SelectedDeploymentId",
+                        column: x => x.SelectedDeploymentId,
+                        principalTable: "DatabaseDeployments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ExamAttempts_Exams_ExamId",
+                        column: x => x.ExamId,
+                        principalTable: "Exams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ExamAttempts_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ExamAvailableDeployments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ExamId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DatabaseDeploymentId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExamAvailableDeployments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExamAvailableDeployments_DatabaseDeployments_DatabaseDeploymentId",
+                        column: x => x.DatabaseDeploymentId,
+                        principalTable: "DatabaseDeployments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ExamAvailableDeployments_Exams_ExamId",
+                        column: x => x.ExamId,
+                        principalTable: "Exams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Solutions",
                 columns: table => new
                 {
@@ -126,6 +209,7 @@ namespace Oganesyan_WebAPI.Migrations
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
                     ExerciseId = table.Column<int>(type: "INTEGER", nullable: false),
                     DeploymentId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ExamId = table.Column<int>(type: "INTEGER", nullable: true),
                     UserAnswer = table.Column<string>(type: "TEXT", nullable: false),
                     IsCorrect = table.Column<bool>(type: "INTEGER", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -140,6 +224,11 @@ namespace Oganesyan_WebAPI.Migrations
                         principalTable: "DatabaseDeployments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Solutions_Exams_ExamId",
+                        column: x => x.ExamId,
+                        principalTable: "Exams",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Solutions_Exercises_ExerciseId",
                         column: x => x.ExerciseId,
@@ -166,6 +255,37 @@ namespace Oganesyan_WebAPI.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_ExamAttempts_ExamId",
+                table: "ExamAttempts",
+                column: "ExamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamAttempts_SelectedDeploymentId",
+                table: "ExamAttempts",
+                column: "SelectedDeploymentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamAttempts_UserId_ExamId",
+                table: "ExamAttempts",
+                columns: new[] { "UserId", "ExamId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamAvailableDeployments_DatabaseDeploymentId",
+                table: "ExamAvailableDeployments",
+                column: "DatabaseDeploymentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamAvailableDeployments_ExamId",
+                table: "ExamAvailableDeployments",
+                column: "ExamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Exams_DatabaseMetaId",
+                table: "Exams",
+                column: "DatabaseMetaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Exercises_DatabaseMetaId",
                 table: "Exercises",
                 column: "DatabaseMetaId");
@@ -180,6 +300,11 @@ namespace Oganesyan_WebAPI.Migrations
                 name: "IX_Solutions_DeploymentId",
                 table: "Solutions",
                 column: "DeploymentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Solutions_ExamId",
+                table: "Solutions",
+                column: "ExamId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Solutions_ExerciseId",
@@ -197,6 +322,12 @@ namespace Oganesyan_WebAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ExamAttempts");
+
+            migrationBuilder.DropTable(
+                name: "ExamAvailableDeployments");
+
+            migrationBuilder.DropTable(
                 name: "Solutions");
 
             migrationBuilder.DropTable(
@@ -204,6 +335,9 @@ namespace Oganesyan_WebAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "DatabaseDeployments");
+
+            migrationBuilder.DropTable(
+                name: "Exams");
 
             migrationBuilder.DropTable(
                 name: "Exercises");

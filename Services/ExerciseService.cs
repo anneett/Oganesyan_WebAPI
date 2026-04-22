@@ -12,10 +12,12 @@ namespace Oganesyan_WebAPI.Services
     {
         private readonly AppDbContext _context;
         private readonly SolutionService _solutionService;
-        public ExerciseService(AppDbContext context, SolutionService solutionService)
+        private readonly QueryExecutionService _queryExecutionService;
+        public ExerciseService(AppDbContext context, SolutionService solutionService, QueryExecutionService queryExecutionService)
         {
             _context = context;
             _solutionService = solutionService;
+            _queryExecutionService = queryExecutionService;
         }
 
         public async Task<Exercise> AddExercise(ExerciseCreateDto exerciseCreateDto)
@@ -46,6 +48,42 @@ namespace Oganesyan_WebAPI.Services
         public async Task<ExerciseStatsDto?> GetExerciseStatsById(int exerciseId)
         {
             return await _solutionService.GetExerciseStatsById(exerciseId);
+        }
+        public async Task<QueryResultDto> TestQueryAsync(TestQueryDto dto)
+        {
+            var deployment = await _context.DatabaseDeployments
+                .Include(d => d.DbMeta)
+                .FirstOrDefaultAsync(d => d.Id == dto.DeploymentId);
+
+            if (deployment?.DbMeta == null)
+                throw new InvalidOperationException("Развертывание не найдено");
+
+            if (!deployment.IsDeployed)
+                throw new InvalidOperationException("База данных не развёрнута");
+
+            if (!_queryExecutionService.IsSafeSelectQuery(dto.Query))
+            {
+                return new QueryResultDto
+                {
+                    IsCorrect = false,
+                    Message = "Разрешены только SELECT-запросы."
+                };
+            }
+
+            try
+            {
+                var result = await _queryExecutionService.ExecuteQueryForTestAsync(deployment, dto.Query);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new QueryResultDto
+                {
+                    IsCorrect = false,
+                    Message = "Ошибка выполнения запроса",
+                    ErrorDetails = ex.Message
+                };
+            }
         }
     }
 }

@@ -54,12 +54,19 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var userId = _userService.GetUserId();
 
-            var success = await _examService.FinishExamAsync(userId, examId);
+            try
+            {
+                var success = await _examService.FinishExamAsync(userId, examId);
 
-            if (!success)
-                return NotFound("Попытка не найдена");
+                if (!success)
+                    return NotFound("Попытка не найдена");
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize]
@@ -81,6 +88,19 @@ namespace Oganesyan_WebAPI.Controllers
         public async Task<IActionResult> GetAttempts(int examId)
         {
             var result = await _examService.GetAttemptsAsync(examId);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("{examId}/user-info")]
+        public async Task<IActionResult> GetUserExamInfo(int examId)
+        {
+            var userId = _userService.GetUserId();
+            var result = await _examService.GetUserExamInfoAsync(userId, examId);
+
+            if (result == null)
+                return NotFound();
+
             return Ok(result);
         }
     }
