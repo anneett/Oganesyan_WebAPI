@@ -73,5 +73,24 @@ namespace Oganesyan_WebAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [Authorize(Roles = "admin")]
+        [HttpPost("batch-upload")]
+        public async Task<ActionResult<BatchUploadResultDto>> BatchUploadExercises([FromBody] BatchExerciseUploadDto dto)
+        {
+            try
+            {
+                var result = await _exerciseService.BatchUploadExercises(dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Ошибка при загрузке упражнений", details = ex.Message });
+            }
+        }
     }
 }

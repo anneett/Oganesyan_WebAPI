@@ -85,5 +85,61 @@ namespace Oganesyan_WebAPI.Services
                 };
             }
         }
+
+        public async Task<BatchUploadResultDto> BatchUploadExercises(BatchExerciseUploadDto dto)
+        {
+            var result = new BatchUploadResultDto();
+            result.TotalProcessed = dto.Exercises.Count;
+
+            var dbMetaExists = await _context.DatabaseMetas.AnyAsync(dm => dm.Id == dto.DatabaseMetaId);
+            if (!dbMetaExists)
+            {
+                throw new InvalidOperationException($"DatabaseMeta с ID {dto.DatabaseMetaId} не найдена.");
+            }
+
+            for (int i = 0; i < dto.Exercises.Count; i++)
+            {
+                var exercise = dto.Exercises[i];
+
+                try
+                {
+                    if (await _context.Exercises.AnyAsync(e => e.Title == exercise.Title))
+                    {
+                        result.SkippedCount++;
+                        result.Errors.Add(new BatchUploadErrorDto
+                        {
+                            LineNumber = i + 1,
+                            Title = exercise.Title,
+                            ErrorMessage = "Задание с таким названием уже существует (пропущено)"
+                        });
+                        continue;
+                    }
+
+                    var newExercise = new Exercise
+                    {
+                        Title = exercise.Title,
+                        Difficulty = exercise.Difficulty ?? dto.DefaultDifficulty ?? ExerciseDifficulty.Medium,
+                        DatabaseMetaId = dto.DatabaseMetaId,
+                        CorrectAnswer = exercise.CorrectAnswer
+                    };
+
+                    _context.Exercises.Add(newExercise);
+                    result.SuccessCount++;
+                }
+                catch (Exception ex)
+                {
+                    result.FailedCount++;
+                    result.Errors.Add(new BatchUploadErrorDto
+                    {
+                        LineNumber = i + 1,
+                        Title = exercise.Title,
+                        ErrorMessage = ex.Message
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return result;
+        }
     }
 }
