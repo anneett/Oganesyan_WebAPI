@@ -37,13 +37,13 @@ namespace Oganesyan_WebAPI.Services
             {
                 var attempt = await _context.ExamAttempts
                     .Include(a => a.Exam)
-                    .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == solutionCreateDto.ExamId.Value);
+                    .FirstOrDefaultAsync(a =>
+                        a.UserId == userId &&
+                        a.ExamId == solutionCreateDto.ExamId.Value &&
+                        a.FinishedAt == null);
 
                 if (attempt == null)
-                    throw new InvalidOperationException("Попытка не найдена. Сначала начните экзамен.");
-
-                if (attempt.FinishedAt != null)
-                    throw new InvalidOperationException("Контрольная работа уже завершена.");
+                    throw new InvalidOperationException("Попытка не найдена или уже завершена. Сначала начните экзамен.");
 
                 if (attempt.SelectedDeploymentId != solutionCreateDto.DeploymentId)
                     throw new InvalidOperationException("Используйте развертывание, выбранное при начале экзамена");

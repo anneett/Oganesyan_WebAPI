@@ -73,6 +73,7 @@ namespace Oganesyan_WebAPI.Migrations
                     Description = table.Column<string>(type: "TEXT", nullable: false),
                     DatabaseMetaId = table.Column<int>(type: "INTEGER", nullable: false),
                     DurationMinutes = table.Column<int>(type: "INTEGER", nullable: false),
+                    MaxAttempts = table.Column<int>(type: "INTEGER", nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsResultsReleased = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)

@@ -75,12 +75,15 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var userId = _userService.GetUserId();
 
-            var result = await _examService.GetMyResultsAsync(userId, examId);
-
-            if (result == null)
-                return NotFound();
-
-            return Ok(result);
+            try
+            {
+                var result = await _examService.GetMyResultsAsync(userId, examId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize(Roles = "admin")]
@@ -102,6 +105,40 @@ namespace Oganesyan_WebAPI.Controllers
                 return NotFound();
 
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("{examId}/my-attempts")]
+        public async Task<IActionResult> GetMyAttempts(int examId)
+        {
+            var userId = _userService.GetUserId();
+
+            try
+            {
+                var result = await _examService.GetUserAllAttemptsAsync(userId, examId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("attempt/{attemptId}/details")]
+        public async Task<IActionResult> GetAttemptDetails(int attemptId)
+        {
+            var userId = _userService.GetUserId();
+
+            try
+            {
+                var result = await _examService.GetAttemptDetailsAsync(userId, attemptId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
     }
 }

@@ -48,10 +48,6 @@ namespace Oganesyan_WebAPI.Data
                 .HasOne(e => e.Exam)
                 .WithMany()
                 .HasForeignKey(e => e.ExamId);
-
-            modelBuilder.Entity<ExamAttempt>()
-                .HasIndex(ea => new { ea.UserId, ea.ExamId })
-                .IsUnique();
         }
     }
 }

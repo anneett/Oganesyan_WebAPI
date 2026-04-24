@@ -170,8 +170,7 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.HasIndex("SelectedDeploymentId");
 
-                    b.HasIndex("UserId", "ExamId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("ExamAttempts");
                 });

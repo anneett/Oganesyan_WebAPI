@@ -11,8 +11,8 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260422133055_AddMaxAttemptsToExam")]
-    partial class AddMaxAttemptsToExam
+    [Migration("20260423120012_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
