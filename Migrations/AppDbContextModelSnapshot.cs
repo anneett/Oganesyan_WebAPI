@@ -123,6 +123,12 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("EasyCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HardCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
@@ -130,6 +136,9 @@ namespace Oganesyan_WebAPI.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MaxAttempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MediumCount")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
@@ -173,6 +182,30 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ExamAttempts");
+                });
+
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAttemptExercise", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ExamAttemptId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamAttemptId");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.ToTable("ExamAttemptExercises");
                 });
 
             modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAvailableDeployment", b =>
@@ -370,6 +403,25 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAttemptExercise", b =>
+                {
+                    b.HasOne("Oganesyan_WebAPI.Models.ExamAttempt", "ExamAttempt")
+                        .WithMany("SelectedExercises")
+                        .HasForeignKey("ExamAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
+                        .WithMany()
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExamAttempt");
+
+                    b.Navigation("Exercise");
+                });
+
             modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAvailableDeployment", b =>
                 {
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "DatabaseDeployment")
@@ -433,6 +485,11 @@ namespace Oganesyan_WebAPI.Migrations
             modelBuilder.Entity("Oganesyan_WebAPI.Models.Exam", b =>
                 {
                     b.Navigation("AvailableDeployments");
+                });
+
+            modelBuilder.Entity("Oganesyan_WebAPI.Models.ExamAttempt", b =>
+                {
+                    b.Navigation("SelectedExercises");
                 });
 #pragma warning restore 612, 618
         }

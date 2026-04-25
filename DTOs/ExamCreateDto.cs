@@ -16,5 +16,17 @@ namespace Oganesyan_WebAPI.DTOs
         public int DurationMinutes { get; set; }
         public int? MaxAttempts { get; set; }
         public List<int> DeploymentIds { get; set; } = new();
+
+        [Required]
+        [Range(0, 100)]
+        public int EasyCount { get; set; }
+
+        [Required]
+        [Range(0, 100)]
+        public int MediumCount { get; set; }
+
+        [Required]
+        [Range(0, 100)]
+        public int HardCount { get; set; }
     }
 }

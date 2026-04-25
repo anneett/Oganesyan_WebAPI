@@ -14,6 +14,42 @@ namespace Oganesyan_WebAPI.Services
             _context = context;
         }
 
+        private async Task<List<ExamAttemptExercise>> GetAttemptExerciseMappingsAsync(int attemptId)
+        {
+            return await _context.ExamAttemptExercises
+                .Include(ae => ae.Exercise)
+                .Where(ae => ae.ExamAttemptId == attemptId)
+                .OrderBy(ae => ae.OrderIndex)
+                .ToListAsync();
+        }
+
+        private async Task<List<Solution>> GetAttemptSolutionsAsync(int userId, int examId, ExamAttempt attempt)
+        {
+            var attemptExerciseIds = await _context.ExamAttemptExercises
+                .Where(ae => ae.ExamAttemptId == attempt.Id)
+                .Select(ae => ae.ExerciseId)
+                .ToListAsync();
+
+            return await _context.Solutions
+                .Include(s => s.Exercise)
+                .Where(s => s.UserId == userId && s.ExamId == examId)
+                .Where(s => attemptExerciseIds.Contains(s.ExerciseId))
+                .Where(s => s.SubmittedAt >= attempt.StartedAt && s.SubmittedAt <= (attempt.FinishedAt ?? DateTime.UtcNow))
+                .OrderByDescending(s => s.SubmittedAt)
+                .ToListAsync();
+        }
+
+        private static List<Solution> GetLatestSolutionsPerExercise(IEnumerable<Solution> solutions)
+        {
+            return solutions
+                .GroupBy(s => s.ExerciseId)
+                .Select(group => group
+                    .OrderByDescending(s => s.SubmittedAt)
+                    .ThenByDescending(s => s.Id)
+                    .First())
+                .ToList();
+        }
+
         public async Task<Exam> CreateExamAsync(ExamCreateDto dto)
         {
             var deployments = await _context.DatabaseDeployments
@@ -25,7 +61,28 @@ namespace Oganesyan_WebAPI.Services
 
             if (deployments.Count != dto.DeploymentIds.Count)
                 throw new InvalidOperationException("Некоторые развертывания не найдены");
-            
+
+            var easyAvailable = await _context.Exercises
+                .Where(e => e.DatabaseMetaId == dto.DatabaseMetaId && e.Difficulty == ExerciseDifficulty.Easy)
+                .CountAsync();
+
+            var mediumAvailable = await _context.Exercises
+                .Where(e => e.DatabaseMetaId == dto.DatabaseMetaId && e.Difficulty == ExerciseDifficulty.Medium)
+                .CountAsync();
+
+            var hardAvailable = await _context.Exercises
+                .Where(e => e.DatabaseMetaId == dto.DatabaseMetaId && e.Difficulty == ExerciseDifficulty.Hard)
+                .CountAsync();
+
+            if (easyAvailable < dto.EasyCount)
+                throw new InvalidOperationException($"Недостаточно легких заданий. Доступно: {easyAvailable}, запрошено: {dto.EasyCount}");
+
+            if (mediumAvailable < dto.MediumCount)
+                throw new InvalidOperationException($"Недостаточно средних заданий. Доступно: {mediumAvailable}, запрошено: {dto.MediumCount}");
+
+            if (hardAvailable < dto.HardCount)
+                throw new InvalidOperationException($"Недостаточно сложных заданий. Доступно: {hardAvailable}, запрошено: {dto.HardCount}");
+
             var exam = new Exam
             {
                 Title = dto.Title,
@@ -33,6 +90,9 @@ namespace Oganesyan_WebAPI.Services
                 DatabaseMetaId = dto.DatabaseMetaId,
                 DurationMinutes = dto.DurationMinutes,
                 MaxAttempts = dto.MaxAttempts,
+                EasyCount = dto.EasyCount,
+                MediumCount = dto.MediumCount,
+                HardCount = dto.HardCount,
                 IsActive = true,
                 IsResultsReleased = false
             };
@@ -62,6 +122,10 @@ namespace Oganesyan_WebAPI.Services
                     IsActive = e.IsActive,
                     IsResultsReleased = e.IsResultsReleased,
                     LogicalDbName = e.DatabaseMeta!.LogicalName,
+                    EasyCount = e.EasyCount,
+                    MediumCount = e.MediumCount,
+                    HardCount = e.HardCount,
+                    TotalExercises = e.EasyCount + e.MediumCount + e.HardCount,
                     AvailablePlatforms = e.AvailableDeployments.Select(ad => new DeploymentInfoDto
                     {
                         Id = ad.DatabaseDeploymentId,
@@ -87,6 +151,7 @@ namespace Oganesyan_WebAPI.Services
                 throw new InvalidOperationException("Выбранное развертывание недоступно для этого экзамена");
 
             var unfinished = await _context.ExamAttempts
+                .Include(a => a.SelectedExercises)
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.ExamId == dto.ExamId && a.FinishedAt == null);
 
             if (unfinished != null)
@@ -99,6 +164,29 @@ namespace Oganesyan_WebAPI.Services
             if (exam.MaxAttempts.HasValue && completedAttempts >= exam.MaxAttempts.Value)
                 throw new InvalidOperationException($"Вы исчерпали все попытки ({exam.MaxAttempts.Value})");
 
+            var random = new Random();
+
+            var allEasy = await _context.Exercises
+                .Where(e => e.DatabaseMetaId == exam.DatabaseMetaId && e.Difficulty == ExerciseDifficulty.Easy)
+                .ToListAsync();
+            var easyExercises = allEasy.OrderBy(_ => random.Next()).Take(exam.EasyCount).ToList();
+
+            var allMedium = await _context.Exercises
+                .Where(e => e.DatabaseMetaId == exam.DatabaseMetaId && e.Difficulty == ExerciseDifficulty.Medium)
+                .ToListAsync();
+            var mediumExercises = allMedium.OrderBy(_ => random.Next()).Take(exam.MediumCount).ToList();
+
+            var allHard = await _context.Exercises
+                .Where(e => e.DatabaseMetaId == exam.DatabaseMetaId && e.Difficulty == ExerciseDifficulty.Hard)
+                .ToListAsync();
+            var hardExercises = allHard.OrderBy(_ => random.Next()).Take(exam.HardCount).ToList();
+
+            var selectedExercises = easyExercises
+                .Concat(mediumExercises)
+                .Concat(hardExercises)
+                .OrderBy(_ => random.Next())
+                .ToList();
+
             var attempt = new ExamAttempt
             {
                 UserId = userId,
@@ -109,7 +197,28 @@ namespace Oganesyan_WebAPI.Services
 
             _context.ExamAttempts.Add(attempt);
             await _context.SaveChangesAsync();
+
+            for (int i = 0; i < selectedExercises.Count; i++)
+            {
+                _context.ExamAttemptExercises.Add(new ExamAttemptExercise
+                {
+                    ExamAttemptId = attempt.Id,
+                    ExerciseId = selectedExercises[i].Id,
+                    OrderIndex = i
+                });
+            }
+
+            await _context.SaveChangesAsync();
             return attempt;
+        }
+
+        public async Task<List<Exercise>> GetAttemptExercisesAsync(int attemptId)
+        {
+            return await _context.ExamAttemptExercises
+                .Where(ae => ae.ExamAttemptId == attemptId)
+                .OrderBy(ae => ae.OrderIndex)
+                .Select(ae => ae.Exercise!)
+                .ToListAsync();
         }
 
         public async Task<object> GetUserExamInfoAsync(int userId, int examId)
@@ -132,7 +241,8 @@ namespace Oganesyan_WebAPI.Services
                 CompletedAttempts = completedCount,
                 RemainingAttempts = exam.MaxAttempts.HasValue ? exam.MaxAttempts.Value - completedCount : (int?)null,
                 HasUnfinishedAttempt = hasUnfinished,
-                CanStart = !exam.MaxAttempts.HasValue || completedCount < exam.MaxAttempts.Value || hasUnfinished
+                CanStart = !exam.MaxAttempts.HasValue || completedCount < exam.MaxAttempts.Value || hasUnfinished,
+                UsedAttempts = attempts.Count
             };
         }
 
@@ -188,16 +298,12 @@ namespace Oganesyan_WebAPI.Services
 
             foreach (var attempt in attempts)
             {
-                var solutions = await _context.Solutions
-                    .Where(s => s.UserId == userId && s.ExamId == examId)
-                    .ToListAsync();
+                var attemptExercises = await GetAttemptExerciseMappingsAsync(attempt.Id);
+                var attemptSolutions = await GetAttemptSolutionsAsync(userId, examId, attempt);
+                var latestSolutions = GetLatestSolutionsPerExercise(attemptSolutions);
 
-                var attemptSolutions = solutions
-                    .Where(s => s.SubmittedAt >= attempt.StartedAt && s.SubmittedAt <= (attempt.FinishedAt ?? DateTime.UtcNow))
-                    .ToList();
-
-                var correctCount = attemptSolutions.Count(s => s.IsCorrect);
-                var totalCount = attemptSolutions.Count;
+                var correctCount = latestSolutions.Count(s => s.IsCorrect);
+                var totalCount = attemptExercises.Count;
 
                 attemptsWithResults.Add(new
                 {
@@ -240,20 +346,23 @@ namespace Oganesyan_WebAPI.Services
 
             if (!exam.IsResultsReleased)
             {
+                var submittedExerciseIds = await GetAttemptSolutionsAsync(userId, exam.Id, attempt);
+
                 return new
                 {
                     IsResultsReleased = false,
                     Message = "Результаты будут доступны после проверки преподавателем",
+                    SubmittedCount = submittedExerciseIds
+                        .Select(s => s.ExerciseId)
+                        .Distinct()
+                        .Count(),
                     StartedAt = attempt.StartedAt,
                     FinishedAt = attempt.FinishedAt
                 };
             }
 
-            var solutions = await _context.Solutions
-                .Include(s => s.Exercise)
-                .Where(s => s.UserId == userId && s.ExamId == exam.Id)
-                .Where(s => s.SubmittedAt >= attempt.StartedAt && s.SubmittedAt <= (attempt.FinishedAt ?? DateTime.UtcNow))
-                .ToListAsync();
+            var attemptExercises = await GetAttemptExerciseMappingsAsync(attempt.Id);
+            var latestSolutions = GetLatestSolutionsPerExercise(await GetAttemptSolutionsAsync(userId, exam.Id, attempt));
 
             return new
             {
@@ -261,16 +370,19 @@ namespace Oganesyan_WebAPI.Services
                 AttemptId = attempt.Id,
                 StartedAt = attempt.StartedAt,
                 FinishedAt = attempt.FinishedAt,
-                Solutions = solutions.Select(s => new
-                {
-                    s.ExerciseId,
-                    ExerciseTitle = s.Exercise.Title,
-                    s.UserAnswer,
-                    s.IsCorrect,
-                    s.Result
-                }),
-                CorrectAnswers = solutions.Count(s => s.IsCorrect),
-                TotalExercises = solutions.Count
+                Solutions = latestSolutions
+                    .OrderBy(solution =>
+                        attemptExercises.FindIndex(exercise => exercise.ExerciseId == solution.ExerciseId))
+                    .Select(s => new
+                    {
+                        s.ExerciseId,
+                        ExerciseTitle = s.Exercise.Title,
+                        s.UserAnswer,
+                        s.IsCorrect,
+                        s.Result
+                    }),
+                CorrectAnswers = latestSolutions.Count(s => s.IsCorrect),
+                TotalExercises = attemptExercises.Count
             };
         }
 
@@ -304,12 +416,9 @@ namespace Oganesyan_WebAPI.Services
             if (attempt == null)
                 throw new InvalidOperationException("Вы не начинали этот экзамен");
 
-            var solutions = await _context.Solutions
-                .Include(s => s.Exercise)
-                .Where(s => s.UserId == userId && s.ExamId == examId)
-                .Where(s => s.SubmittedAt >= attempt.StartedAt &&
-                            s.SubmittedAt <= (attempt.FinishedAt ?? DateTime.UtcNow))
-                .ToListAsync();
+            var attemptExercises = await GetAttemptExerciseMappingsAsync(attempt.Id);
+            var attemptSolutions = await GetAttemptSolutionsAsync(userId, examId, attempt);
+            var latestSolutions = GetLatestSolutionsPerExercise(attemptSolutions);
 
             if (!exam.IsResultsReleased)
             {
@@ -317,7 +426,7 @@ namespace Oganesyan_WebAPI.Services
                 {
                     IsResultsReleased = false,
                     Message = "Результаты будут доступны после проверки",
-                    SubmittedCount = solutions.Count,
+                    SubmittedCount = latestSolutions.Count,
                     StartedAt = attempt.StartedAt,
                     FinishedAt = attempt.FinishedAt
                 };
@@ -328,37 +437,67 @@ namespace Oganesyan_WebAPI.Services
                 IsResultsReleased = true,
                 StartedAt = attempt.StartedAt,
                 FinishedAt = attempt.FinishedAt,
-                Solutions = solutions.Select(s => new
-                {
-                    s.ExerciseId,
-                    ExerciseTitle = s.Exercise.Title,
-                    s.UserAnswer,
-                    s.IsCorrect,
-                    s.Result
-                }),
-                CorrectAnswers = solutions.Count(s => s.IsCorrect),
-                TotalExercises = solutions.Count
+                Solutions = latestSolutions
+                    .OrderBy(solution =>
+                        attemptExercises.FindIndex(exercise => exercise.ExerciseId == solution.ExerciseId))
+                    .Select(s => new
+                    {
+                        s.ExerciseId,
+                        ExerciseTitle = s.Exercise.Title,
+                        s.UserAnswer,
+                        s.IsCorrect,
+                        s.Result
+                    }),
+                CorrectAnswers = latestSolutions.Count(s => s.IsCorrect),
+                TotalExercises = attemptExercises.Count
             };
         }
+        public async Task<List<Exercise>?> GetAttemptExercisesForUserAsync(int userId, int attemptId)
+        {
+            var attempt = await _context.ExamAttempts
+                .FirstOrDefaultAsync(a => a.Id == attemptId && a.UserId == userId);
+
+            if (attempt == null)
+                return null;
+
+            var exercises = await _context.ExamAttemptExercises
+                .Where(ae => ae.ExamAttemptId == attemptId)
+                .OrderBy(ae => ae.OrderIndex)
+                .Select(ae => ae.Exercise!)
+                .ToListAsync();
+
+            return exercises;
+        }
+
         public async Task<List<object>> GetAttemptsAsync(int examId)
         {
             var attempts = await _context.ExamAttempts
                 .Include(a => a.User)
-                .Where(a => a.ExamId == examId)
-                .Select(a => new
-                {
-                    a.Id,
-                    UserId = a.User!.Id,
-                    UserLogin = a.User.Login,
-                    UserName = a.User.UserName,
-                    a.StartedAt,
-                    a.FinishedAt,
-                    CorrectAnswers = _context.Solutions.Count(s => s.UserId == a.UserId && s.ExamId == examId && s.IsCorrect),
-                    TotalAnswers = _context.Solutions.Count(s => s.UserId == a.UserId && s.ExamId == examId)
-                })
-                .ToListAsync<object>();
+                .Where(a => a.ExamId == examId && a.FinishedAt != null)
+                .ToListAsync();
 
-            return attempts;
+            var result = new List<object>();
+
+            foreach (var attempt in attempts)
+            {
+                var attemptExercises = await GetAttemptExerciseMappingsAsync(attempt.Id);
+                var latestSolutions = GetLatestSolutionsPerExercise(
+                    await GetAttemptSolutionsAsync(attempt.UserId, examId, attempt));
+
+                result.Add(new
+                {
+                    attempt.Id,
+                    UserId = attempt.User!.Id,
+                    UserLogin = attempt.User.Login,
+                    UserName = attempt.User.UserName,
+                    attempt.StartedAt,
+                    attempt.FinishedAt,
+                    CorrectAnswers = latestSolutions.Count(s => s.IsCorrect),
+                    TotalAnswers = attemptExercises.Count
+                });
+            }
+
+            return result;
         }
     }
 }

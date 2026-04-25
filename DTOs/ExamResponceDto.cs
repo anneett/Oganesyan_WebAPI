@@ -12,5 +12,10 @@
         public bool IsResultsReleased { get; set; }
         public string LogicalDbName { get; set; } = string.Empty;
         public List<DeploymentInfoDto> AvailablePlatforms { get; set; } = new();
+
+        public int EasyCount { get; set; }
+        public int MediumCount { get; set; }
+        public int HardCount { get; set; }
+        public int TotalExercises { get; set; }
     }
 }

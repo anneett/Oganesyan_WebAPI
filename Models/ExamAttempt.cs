@@ -20,5 +20,7 @@ namespace Oganesyan_WebAPI.Models
 
         public DateTime StartedAt { get; set; } = DateTime.UtcNow;
         public DateTime? FinishedAt { get; set; }
+
+        public ICollection<ExamAttemptExercise> SelectedExercises { get; set; } = new List<ExamAttemptExercise>();
     }
 }

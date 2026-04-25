@@ -22,7 +22,14 @@ namespace Oganesyan_WebAPI.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Create(ExamCreateDto dto)
         {
-            return Ok(await _examService.CreateExamAsync(dto));
+            try
+            {
+                return Ok(await _examService.CreateExamAsync(dto));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize]
@@ -37,7 +44,15 @@ namespace Oganesyan_WebAPI.Controllers
         public async Task<IActionResult> Start(ExamStartDto dto)
         {
             var userId = _userService.GetUserId();
-            return Ok(await _examService.StartAttemptAsync(userId, dto));
+
+            try
+            {
+                return Ok(await _examService.StartAttemptAsync(userId, dto));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize(Roles = "admin")]
@@ -139,6 +154,20 @@ namespace Oganesyan_WebAPI.Controllers
             {
                 return NotFound(ex.Message);
             }
+        }
+
+        [Authorize]
+        [HttpGet("attempt/{attemptId}/exercises")]
+        public async Task<IActionResult> GetAttemptExercises(int attemptId)
+        {
+            var userId = _userService.GetUserId();
+
+            var exercises = await _examService.GetAttemptExercisesForUserAsync(userId, attemptId);
+
+            if (exercises == null)
+                return NotFound("Попытка не найдена");
+
+            return Ok(exercises);
         }
     }
 }

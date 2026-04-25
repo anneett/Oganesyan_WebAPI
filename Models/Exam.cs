@@ -19,6 +19,15 @@ namespace Oganesyan_WebAPI.Models
         public int? MaxAttempts { get; set; }
 
         [Required]
+        public int EasyCount { get; set; }
+
+        [Required]
+        public int MediumCount { get; set; }
+
+        [Required]
+        public int HardCount { get; set; }
+
+        [Required]
         public bool IsActive { get; set; } = true;
 
         [Required]
