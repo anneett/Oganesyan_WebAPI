@@ -11,7 +11,7 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260425153851_InitialCreate")]
+    [Migration("20260426094824_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
