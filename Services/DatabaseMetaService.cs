@@ -46,5 +46,30 @@ namespace Oganesyan_WebAPI.Services
             await _context.SaveChangesAsync();
             return dbMeta;
         }
+
+        public async Task<DatabaseMeta?> UpdateLogicalDbAsync(
+    int id,
+    DatabaseMetaUpdateDto dto,
+    string? newErdImagePath)
+        {
+            var dbMeta = await _context.DatabaseMetas.FindAsync(id);
+            if (dbMeta == null) return null;
+
+            dbMeta.LogicalName = dto.LogicalName;
+            dbMeta.Description = dto.Description;
+            dbMeta.CreateScriptTemplate = dto.CreateScriptTemplate;
+
+            if (dto.RemoveErdImage)
+            {
+                dbMeta.ErdImagePath = null;
+            }
+            else if (newErdImagePath != null)
+            {
+                dbMeta.ErdImagePath = newErdImagePath;
+            }
+
+            await _context.SaveChangesAsync();
+            return dbMeta;
+        }
     }
 }

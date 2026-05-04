@@ -88,7 +88,7 @@ namespace Oganesyan_WebAPI.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 DatabaseMetaId = dto.DatabaseMetaId,
-                DurationMinutes = dto.DurationMinutes,
+                DurationMinutes = dto.DurationMinutes == 0 ? null : dto.DurationMinutes,
                 MaxAttempts = dto.MaxAttempts,
                 EasyCount = dto.EasyCount,
                 MediumCount = dto.MediumCount,
@@ -257,7 +257,10 @@ namespace Oganesyan_WebAPI.Services
 
             if (attempt == null) return false;
 
-            var endTime = attempt.StartedAt.AddMinutes(attempt.Exam!.DurationMinutes);
+            if (attempt.Exam!.DurationMinutes == null)
+                return true;
+
+            var endTime = attempt.StartedAt.AddMinutes(attempt.Exam.DurationMinutes.Value);
             return DateTime.UtcNow <= endTime;
         }
 
@@ -386,6 +389,53 @@ namespace Oganesyan_WebAPI.Services
             };
         }
 
+        public async Task<object> GetAttemptDetailsForAdminAsync(int attemptId)
+        {
+            var attempt = await _context.ExamAttempts
+                .Include(a => a.Exam)
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.Id == attemptId);
+
+            if (attempt == null)
+                throw new InvalidOperationException("Попытка не найдена");
+
+            var attemptExercises = await GetAttemptExerciseMappingsAsync(attempt.Id);
+            var latestSolutions = GetLatestSolutionsPerExercise(
+                await GetAttemptSolutionsAsync(attempt.UserId, attempt.ExamId, attempt));
+            var latestSolutionsByExerciseId = latestSolutions.ToDictionary(solution => solution.ExerciseId);
+
+            return new
+            {
+                AttemptId = attempt.Id,
+                ExamId = attempt.ExamId,
+                ExamTitle = attempt.Exam!.Title,
+                IsResultsReleased = attempt.Exam.IsResultsReleased,
+                UserId = attempt.UserId,
+                UserLogin = attempt.User!.Login,
+                UserName = attempt.User.UserName,
+                StartedAt = attempt.StartedAt,
+                FinishedAt = attempt.FinishedAt,
+                CorrectAnswers = latestSolutions.Count(solution => solution.IsCorrect),
+                TotalExercises = attemptExercises.Count,
+                Solutions = attemptExercises.Select(attemptExercise =>
+                {
+                    var hasSolution = latestSolutionsByExerciseId.TryGetValue(attemptExercise.ExerciseId, out var solution);
+
+                    return new
+                    {
+                        ExerciseId = attemptExercise.ExerciseId,
+                        ExerciseTitle = attemptExercise.Exercise!.Title,
+                        Difficulty = (int)attemptExercise.Exercise.Difficulty,
+                        IsSubmitted = hasSolution,
+                        UserAnswer = hasSolution ? solution!.UserAnswer : null,
+                        IsCorrect = hasSolution ? solution!.IsCorrect : (bool?)null,
+                        Result = hasSolution ? solution!.Result : null,
+                        CorrectAnswer = attemptExercise.Exercise.CorrectAnswer
+                    };
+                })
+            };
+        }
+
         public async Task<bool> FinishExamAsync(int userId, int examId)
         {
             var attempt = await _context.ExamAttempts
@@ -501,3 +551,4 @@ namespace Oganesyan_WebAPI.Services
         }
     }
 }
+

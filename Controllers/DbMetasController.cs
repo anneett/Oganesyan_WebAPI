@@ -73,7 +73,6 @@ namespace Oganesyan_WebAPI.Controllers
             {
                 return Ok(new { success = false, message = ex.Message });
             }
-        }
-        
+        }        
     }
 }

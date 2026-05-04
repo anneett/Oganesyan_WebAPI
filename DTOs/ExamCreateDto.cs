@@ -13,7 +13,7 @@ namespace Oganesyan_WebAPI.DTOs
         public int DatabaseMetaId { get; set; }
 
         [Required]
-        public int DurationMinutes { get; set; }
+        public int? DurationMinutes { get; set; }
         public int? MaxAttempts { get; set; }
         public List<int> DeploymentIds { get; set; } = new();
 

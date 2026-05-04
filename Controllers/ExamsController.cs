@@ -156,6 +156,21 @@ namespace Oganesyan_WebAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "admin")]
+        [HttpGet("admin/attempt/{attemptId}/details")]
+        public async Task<IActionResult> GetAdminAttemptDetails(int attemptId)
+        {
+            try
+            {
+                var result = await _examService.GetAttemptDetailsForAdminAsync(attemptId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
         [Authorize]
         [HttpGet("attempt/{attemptId}/exercises")]
         public async Task<IActionResult> GetAttemptExercises(int attemptId)

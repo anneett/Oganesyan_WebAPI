@@ -67,5 +67,39 @@ namespace Oganesyan_WebAPI.Controllers
                 databaseMeta.LogicalName
             });
         }
+        [Authorize(Roles = "admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateLogicalDatabase(int id, [FromForm] DatabaseMetaUpdateDto dto, IFormFile? erdImage)
+        {
+            string? newErdImagePath = null;
+
+            if (erdImage != null)
+            {
+                var uploadsDir = Path.Combine(_env.ContentRootPath, "uploads", "erd");
+                Directory.CreateDirectory(uploadsDir);
+
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(erdImage.FileName)}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await erdImage.CopyToAsync(stream);
+
+                newErdImagePath = $"/uploads/erd/{fileName}";
+            }
+
+            var updated = await _databaseMetaService.UpdateLogicalDbAsync(id, dto, newErdImagePath);
+
+            if (updated == null)
+                return NotFound(new { message = "Логическая БД не найдена" });
+
+            return Ok(new
+            {
+                updated.Id,
+                updated.LogicalName,
+                updated.Description,
+                updated.CreateScriptTemplate,
+                updated.ErdImagePath
+            });
+        }
     }
 }

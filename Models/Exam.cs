@@ -15,7 +15,7 @@ namespace Oganesyan_WebAPI.Models
         public DatabaseMeta? DatabaseMeta { get; set; }
 
         [Required]
-        public int DurationMinutes { get; set; }
+        public int? DurationMinutes { get; set; }
         public int? MaxAttempts { get; set; }
 
         [Required]

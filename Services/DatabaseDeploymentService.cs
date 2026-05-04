@@ -30,36 +30,50 @@ namespace Oganesyan_WebAPI.Services
             var dbMeta = await _context.DbMetas
                 .FindAsync(dto.DbMetaId) ?? throw new ArgumentException("СУБД не найдена");
 
+            if (!dto.ExecuteScript)
+                throw new InvalidOperationException("Развертывание без выполнения SQL-скрипта больше не поддерживается");
+
             var existing = await _context.DatabaseDeployments
                 .FirstOrDefaultAsync(d =>
                     d.DatabaseMetaId == databaseMetaId &&
                     d.DbMetaId == dto.DbMetaId);
 
-            if (existing != null)
+            if (existing != null && existing.IsDeployed)
                 throw new InvalidOperationException("Эта БД уже развернута на данной СУБД");
 
-            bool deployed = false;
+            string? scriptToExecute = null;
 
-            if (dto.ExecuteScript && !string.IsNullOrEmpty(logicalDb.CreateScriptTemplate))
+            if (!string.IsNullOrWhiteSpace(dto.OneTimeScript))
             {
-                await CreatePhysicalDatabase(dbMeta, dto.PhysicalDatabaseName);
-                string adaptedScript = AdaptSqlScript(logicalDb.CreateScriptTemplate, dbMeta.dbType);
-
-                await ExecuteScriptOnDatabase(dbMeta, dto.PhysicalDatabaseName, adaptedScript);
-            
-                deployed = true;
+                scriptToExecute = dto.OneTimeScript;
+            }
+            else if (!string.IsNullOrWhiteSpace(logicalDb.CreateScriptTemplate))
+            {
+                scriptToExecute = logicalDb.CreateScriptTemplate;
             }
 
-            var deployment = new DatabaseDeployment
+            if (string.IsNullOrWhiteSpace(scriptToExecute))
+                throw new InvalidOperationException("Для развертывания нужно указать одноразовый SQL-скрипт или добавить SQL-шаблон в логическую БД");
+
+            await CreatePhysicalDatabase(dbMeta, dto.PhysicalDatabaseName);
+            string adaptedScript = AdaptSqlScript(scriptToExecute, dbMeta.dbType);
+            await ExecuteScriptOnDatabase(dbMeta, dto.PhysicalDatabaseName, adaptedScript);
+
+            var deployment = existing ?? new DatabaseDeployment
             {
                 DatabaseMetaId = databaseMetaId,
                 DbMetaId = dto.DbMetaId,
-                PhysicaDatabaseName = dto.PhysicalDatabaseName,
-                IsDeployed = deployed,
-                DeployedAt = deployed ? DateTime.UtcNow : default
             };
 
-            _context.DatabaseDeployments.Add(deployment);
+            deployment.PhysicaDatabaseName = dto.PhysicalDatabaseName;
+            deployment.IsDeployed = true;
+            deployment.DeployedAt = DateTime.UtcNow;
+
+            if (existing == null)
+            {
+                _context.DatabaseDeployments.Add(deployment);
+            }
+
             await _context.SaveChangesAsync();
 
             return deployment;
