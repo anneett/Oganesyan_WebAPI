@@ -17,10 +17,10 @@ namespace Oganesyan_WebAPI.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    LogicalName = table.Column<string>(type: "TEXT", nullable: false),
+                    LogicalName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    PhysicalName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
                     ErdImagePath = table.Column<string>(type: "TEXT", nullable: true),
-                    CreateScriptTemplate = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -34,9 +34,11 @@ namespace Oganesyan_WebAPI.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     dbType = table.Column<string>(type: "TEXT", nullable: false),
-                    ConnectionString = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    Provider = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
+                    ConnectionString = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    Provider = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -89,7 +91,7 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.DatabaseMetaId,
                         principalTable: "DatabaseMetas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -111,7 +113,7 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.DatabaseMetaId,
                         principalTable: "DatabaseMetas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -122,9 +124,7 @@ namespace Oganesyan_WebAPI.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     DatabaseMetaId = table.Column<int>(type: "INTEGER", nullable: false),
                     DbMetaId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PhysicaDatabaseName = table.Column<string>(type: "TEXT", nullable: false),
-                    IsDeployed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    DeployedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    LinkedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -134,13 +134,13 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.DatabaseMetaId,
                         principalTable: "DatabaseMetas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_DatabaseDeployments_DbMetas_DbMetaId",
                         column: x => x.DbMetaId,
                         principalTable: "DbMetas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -163,13 +163,13 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.SelectedDeploymentId,
                         principalTable: "DatabaseDeployments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ExamAttempts_Exams_ExamId",
                         column: x => x.ExamId,
                         principalTable: "Exams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ExamAttempts_Users_UserId",
                         column: x => x.UserId,
@@ -195,7 +195,7 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.DatabaseDeploymentId,
                         principalTable: "DatabaseDeployments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ExamAvailableDeployments_Exams_ExamId",
                         column: x => x.ExamId,
@@ -227,18 +227,19 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.DeploymentId,
                         principalTable: "DatabaseDeployments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Solutions_Exams_ExamId",
                         column: x => x.ExamId,
                         principalTable: "Exams",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Solutions_Exercises_ExerciseId",
                         column: x => x.ExerciseId,
                         principalTable: "Exercises",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -265,7 +266,7 @@ namespace Oganesyan_WebAPI.Migrations
                         column: x => x.ExerciseId,
                         principalTable: "Exercises",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -280,9 +281,9 @@ namespace Oganesyan_WebAPI.Migrations
                 column: "DbMetaId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DbMetas_dbType",
+                name: "IX_DbMetas_Name",
                 table: "DbMetas",
-                column: "dbType",
+                column: "Name",
                 unique: true);
 
             migrationBuilder.CreateIndex(

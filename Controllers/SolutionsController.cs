@@ -1,11 +1,7 @@
-﻿using Humanizer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Oganesyan_WebAPI.DTOs;
-using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
-using System.Configuration;
 using System.Security.Claims;
 
 namespace Oganesyan_WebAPI.Controllers
@@ -26,52 +22,46 @@ namespace Oganesyan_WebAPI.Controllers
         public async Task<IActionResult> AddSolution([FromBody] SolutionCreateDto solutionCreateDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId) || userId == 0)
-            {
+            if (!int.TryParse(userIdClaim, out var userId) || userId == 0)
                 return Unauthorized();
-            }
 
             var result = await _solutionService.AddSolution(solutionCreateDto, userId);
-
             if (result == null)
-            {
                 return BadRequest(new { message = "Ошибка при создании решения" });
-            }
+
             return Ok(result);
         }
 
         [Authorize]
         [HttpGet("{id}")]
-        public async Task<ActionResult<Solution>> GetSolutionById(int id)
+        public async Task<ActionResult<Models.Solution>> GetSolutionById(int id)
         {
             var solution = await _solutionService.GetSolutionById(id);
             if (solution == null)
-            {
                 return NotFound();
-            }
 
             return Ok(solution);
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Solution>>> GetSolutions()
+        public async Task<ActionResult<IEnumerable<Models.Solution>>> GetSolutions()
         {
             return await _solutionService.GetSolutions();
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet("exercises-percent")]
-        public async Task<ActionResult<List<ExerciseStatsDto>>> GetPercentCorrectForExercises()
+        public async Task<ActionResult<List<ExerciseStatsDto>>> GetPercentCorrectForExercises([FromQuery] int? databaseMetaId)
         {
-            return await _solutionService.GetStatsByExercises();
+            return await _solutionService.GetStatsByExercises(databaseMetaId);
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet("users-percent")]
-        public async Task<ActionResult<List<UserStatsDto>>> GetPercentCorrectForUsers()
+        public async Task<ActionResult<List<UserStatsDto>>> GetPercentCorrectForUsers([FromQuery] int? databaseMetaId)
         {
-            return await _solutionService.GetStatsByUsers();
+            return await _solutionService.GetStatsByUsers(databaseMetaId);
         }
     }
 }

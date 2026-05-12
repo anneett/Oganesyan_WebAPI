@@ -3,7 +3,8 @@
     public class DatabaseMetaCreateDto
     {
         public string LogicalName { get; set; } = string.Empty;
+        public string PhysicalName { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? CreateScriptTemplate { get; set; }
+        public List<int> ConnectionIds { get; set; } = new();
     }
 }

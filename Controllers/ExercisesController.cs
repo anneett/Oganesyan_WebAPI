@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
@@ -38,18 +31,16 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var exercise = await _exerciseService.GetExerciseById(id);
             if (exercise == null)
-            {
                 return NotFound();
-            }
 
             return Ok(exercise);
         }
 
         [Authorize]
         [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
+        public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises([FromQuery] int? databaseMetaId)
         {
-            return await _exerciseService.GetExercises();
+            return await _exerciseService.GetExercises(databaseMetaId);
         }
 
         [Authorize]
@@ -59,7 +50,7 @@ namespace Oganesyan_WebAPI.Controllers
             return await _exerciseService.GetExerciseStatsById(id);
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize]
         [HttpPost("test-query")]
         public async Task<ActionResult<QueryResultDto>> TestQuery([FromBody] TestQueryDto dto)
         {

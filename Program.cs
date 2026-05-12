@@ -1,19 +1,16 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.OAuth;
+ï»¿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Npgsql;
 using MySqlConnector;
 using Microsoft.Data.SqlClient;
+using Npgsql;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
 using System.Data.Common;
-using System.Text;
-using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +26,6 @@ DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
 DbProviderFactories.RegisterFactory("MySqlConnector", MySqlConnectorFactory.Instance);
 DbProviderFactories.RegisterFactory("Microsoft.Data.SqlClient", SqlClientFactory.Instance);
 DbProviderFactories.RegisterFactory("Microsoft.Data.Sqlite", SqliteFactory.Instance);
-
 
 var authOptions = builder.Configuration.GetSection("JwtSettings").Get<AuthOptions>()
                   ?? throw new InvalidOperationException("JwtSettings section is missing.");
@@ -52,21 +48,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowCon",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowCon", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
-// Add services to the container.
+builder.Services.AddDataProtection();
+
 builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<SolutionService>();
 builder.Services.AddScoped<AuthService>();
-
+builder.Services.AddScoped<ConnectionStringProtectionService>();
 builder.Services.AddScoped<QueryExecutionService>();
 builder.Services.AddScoped<DbMetaService>();
 builder.Services.AddScoped<DatabaseMetaService>();
@@ -79,6 +75,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler =
             System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
@@ -94,7 +91,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Âñòàâüòå JWT òîêåí"
+        Description = "Ð’ÑÑ‚Ð°Ð²ÑŒÑ‚Ðµ JWT Ñ‚Ð¾ÐºÐµÐ½"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -108,31 +105,29 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            Array.Empty<string>()
         }
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
-    //app.UseSwaggerUI(c =>
-    //{
-    //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-    //    c.RoutePrefix = string.Empty;
-    //});
 }
 
-//app.UseHttpsRedirection();
-
+app.UseCors("AllowCon");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowCon");
 
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
 Directory.CreateDirectory(uploadsPath);
@@ -144,5 +139,5 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
-
 app.Run();
+

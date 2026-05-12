@@ -1,17 +1,7 @@
-﻿using Humanizer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
-using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Oganesyan_WebAPI.Controllers
 {
@@ -21,6 +11,7 @@ namespace Oganesyan_WebAPI.Controllers
     {
         private readonly UserService _userService;
         private readonly IConfiguration _configuration;
+
         public UsersController(UserService userService, IConfiguration configuration)
         {
             _userService = userService;
@@ -33,16 +24,14 @@ namespace Oganesyan_WebAPI.Controllers
             try
             {
                 var user = await _userService.AddUser(userCreateDto);
-                var result = new UserDto
+                return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, new UserDto
                 {
                     Id = user.Id,
                     Login = user.Login,
                     UserName = user.UserName,
                     IsAdmin = user.IsAdmin,
                     InArchive = user.InArchive
-                };
-
-                return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, result);
+                });
             }
             catch (InvalidOperationException ex)
             {
@@ -56,19 +45,16 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
-            {
                 return NotFound();
-            }
-            var userDto = new UserDto
+
+            return Ok(new UserDto
             {
                 Id = user.Id,
                 Login = user.Login,
                 UserName = user.UserName,
                 IsAdmin = user.IsAdmin,
                 InArchive = user.InArchive
-            };
-
-            return Ok(userDto);
+            });
         }
 
         [Authorize(Roles = "admin")]
@@ -76,45 +62,58 @@ namespace Oganesyan_WebAPI.Controllers
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
             var users = await _userService.GetUsers();
-            var result = users.Select(u => new UserDto
+            return Ok(users.Select(u => new UserDto
             {
                 Id = u.Id,
                 Login = u.Login,
                 UserName = u.UserName,
                 IsAdmin = u.IsAdmin,
                 InArchive = u.InArchive
-            })
-            .ToList();
-
-            return Ok(result);
+            }).ToList());
         }
 
         [Authorize]
         [HttpGet("profile")]
         public async Task<ActionResult<UserDto>> GetProfile()
         {
-            var profile = await _userService.GetProfile();
+            return Ok(await _userService.GetProfile());
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("profile/{id}")]
+        public async Task<ActionResult<UserDto>> GetProfileById(int id)
+        {
+            var profile = await _userService.GetUserProfileById(id);
+            if (profile == null)
+                return NotFound();
+
             return Ok(profile);
         }
 
         [Authorize]
         [HttpGet("stat")]
-        public async Task<ActionResult<UserSolutionDto>> GetStatistics()
+        public async Task<ActionResult<IEnumerable<UserSolutionDto>>> GetStatistics([FromQuery] int? databaseMetaId)
         {
-            var statistics = await _userService.GetStatistics();
-            return Ok(statistics);
+            return Ok(await _userService.GetStatistics(databaseMetaId));
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("stat/{id}")]
+        public async Task<ActionResult<IEnumerable<UserSolutionDto>>> GetStatisticsById(int id, [FromQuery] int? databaseMetaId)
+        {
+            return Ok(await _userService.GetUserStatisticsById(id, databaseMetaId));
         }
 
         [Authorize]
         [HttpPatch("update")]
         public async Task<IActionResult> UpdateUserSelf([FromBody] UserUpdateDto userUpdateDto)
         {
-            int userId = _userService.GetUserId();
+            var userId = _userService.GetUserId();
             try
             {
                 await _userService.UpdateUser(userId, userUpdateDto);
             }
-            catch (Exception)
+            catch
             {
                 return NotFound();
             }
@@ -128,11 +127,9 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
-            {
                 return NotFound();
-            }
-            await _userService.ChangeUserRole(id);
 
+            await _userService.ChangeUserRole(id);
             return NoContent();
         }
 
@@ -142,58 +139,10 @@ namespace Oganesyan_WebAPI.Controllers
         {
             var user = await _userService.GetUserById(id);
             if (user == null)
-            {
                 return NotFound();
-            }
+
             await _userService.ArchiveUser(id);
             return NoContent();
         }
-
-        //[Authorize(Roles = "admin")]
-        //[HttpPut("update/{id}")]
-        //public async Task<IActionResult> UpdateUserById(int id, [FromBody] UserUpdateDto userUpdateDto)
-        //{
-        //    try
-        //    {
-        //        await _userService.UpdateUser(id, userUpdateDto);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return NoContent();
-        //}
-
-        //[Authorize(Roles = "admin")]
-        //[HttpDelete("delete/{id}")]
-        //public async Task<IActionResult> DeleteUserById(int id)
-        //{
-        //    var user = await _userService.GetUserById(id);
-        //    if (user == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    await _userService.DeleteUser(id);
-
-        //    return NoContent();
-        //}
-
-        //[Authorize]
-        //[HttpDelete("selfdelete")]
-        //public async Task<IActionResult> DeleteUserSelf()
-        //{
-        //    int userId = _userService.GetUserId();
-        //    try
-        //    {
-        //        await _userService.DeleteUser(userId);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return NoContent();
-        //}
     }
 }

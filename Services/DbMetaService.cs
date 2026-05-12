@@ -8,45 +8,92 @@ namespace Oganesyan_WebAPI.Services
     public class DbMetaService
     {
         private readonly AppDbContext _context;
-        public DbMetaService(AppDbContext context)
+        private readonly ConnectionStringProtectionService _protectionService;
+
+        public DbMetaService(AppDbContext context, ConnectionStringProtectionService protectionService)
         {
             _context = context;
+            _protectionService = protectionService;
         }
 
         public async Task<List<DbMeta>> GetAllDbMetasAsync()
         {
-            return await _context.DbMetas.ToListAsync();
+            return await _context.DbMetas.OrderBy(d => d.Name).ToListAsync();
         }
 
-        //public async Task<DbMeta?> GetByIdAsync(int id)
-        //{
-        //    return await _context.DbMetas.FindAsync(id);
-        //}
-
-        //public async Task<DbMeta?> GetByTypeAsync(string dbType)
-        //{
-        //    return await _context.DbMetas
-        //        .FirstOrDefaultAsync(d => d.dbType == dbType);
-        //}
-
-        public async Task<DbMeta> CreateAsync(string dbType, string connectionString, string provider)
+        public async Task<DbMeta?> GetByIdAsync(int id)
         {
-            var existing = await _context.DbMetas.FirstOrDefaultAsync(d => d.dbType == dbType);
+            return await _context.DbMetas.FindAsync(id);
+        }
+
+        public async Task<DbMeta> CreateAsync(string name, string dbType, string connectionString, string provider)
+        {
+            var normalizedName = name.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedName))
+                throw new InvalidOperationException("Имя подключения обязательно");
+
+            var existing = await _context.DbMetas.FirstOrDefaultAsync(d => d.Name.ToLower() == normalizedName.ToLower());
             if (existing != null)
-                throw new InvalidOperationException($"СУБД типа '{dbType}' уже зарегистрирована");
+                throw new InvalidOperationException($"Подключение с именем '{normalizedName}' уже существует");
 
             await TestConnectionAsync(connectionString, provider);
 
             var dbMeta = new DbMeta
             {
+                Name = normalizedName,
                 dbType = dbType,
-                ConnectionString = connectionString,
-                Provider = provider
+                ConnectionString = _protectionService.Protect(connectionString),
+                Provider = provider,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.DbMetas.Add(dbMeta);
             await _context.SaveChangesAsync();
             return dbMeta;
+        }
+
+        public async Task<DbMeta?> UpdateAsync(int id, string name, string dbType, string? connectionString, string provider)
+        {
+            var dbMeta = await _context.DbMetas.FindAsync(id);
+            if (dbMeta == null)
+                return null;
+
+            var normalizedName = name.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedName))
+                throw new InvalidOperationException("Имя подключения обязательно");
+
+            var duplicate = await _context.DbMetas
+                .FirstOrDefaultAsync(d => d.Id != id && d.Name.ToLower() == normalizedName.ToLower());
+            if (duplicate != null)
+                throw new InvalidOperationException($"Подключение с именем '{normalizedName}' уже существует");
+
+            var effectiveConnectionString = string.IsNullOrWhiteSpace(connectionString)
+                ? _protectionService.Unprotect(dbMeta.ConnectionString)
+                : connectionString;
+
+            await TestConnectionAsync(effectiveConnectionString, provider);
+
+            dbMeta.Name = normalizedName;
+            dbMeta.dbType = dbType;
+            dbMeta.Provider = provider;
+
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                dbMeta.ConnectionString = _protectionService.Protect(connectionString);
+            }
+
+            await _context.SaveChangesAsync();
+            return dbMeta;
+        }
+
+        public string GetDecryptedConnectionString(DbMeta dbMeta)
+        {
+            return _protectionService.Unprotect(dbMeta.ConnectionString);
+        }
+
+        public string GetMaskedConnectionString(DbMeta dbMeta)
+        {
+            return _protectionService.MaskProtected(dbMeta);
         }
 
         public async Task<bool> TestConnectionAsync(string connectionString, string provider)
@@ -64,20 +111,6 @@ namespace Oganesyan_WebAPI.Services
                 throw new InvalidOperationException($"Не удалось подключиться к СУБД: {ex.Message}");
             }
         }
-
-        // ЕСЛИ АДМИН НЕ БУДЕТ ВВОДИТЬ ГОТОВУЮ СТРОКУ ПОДКЛЮЧЕНИЯ, ТО ЛУЧШЕ ТАК
-        
-        //public static string GenerateConnectionString(string dbType, string host, int port, string username, string password)
-        //{
-        //    return dbType switch
-        //    {
-        //        "PostgreSQL" => $"Host={host};Port={port};Username={username};Password={password}",
-        //        "MySQL" => $"Server={host};Port={port};User={username};Password={password}",
-        //        "MS SQL Server" => $"Server={host},{port};User Id={username};Password={password};TrustServerCertificate=True",
-        //        "SQLite" => "Data Source=:memory:",
-        //        _ => throw new NotSupportedException($"СУБД {dbType} не поддерживается")
-        //    };
-        //}
 
         public static string GetProviderName(string dbType)
         {

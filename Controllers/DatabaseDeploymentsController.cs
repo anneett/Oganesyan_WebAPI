@@ -17,7 +17,7 @@ namespace Oganesyan_WebAPI.Controllers
             _databaseDeploymentService = databaseDeploymentService;
         }
 
-        [Authorize(Roles = "admin")]
+        [Authorize]
         [HttpGet("{metaId}")]
         public async Task<ActionResult<IEnumerable<DatabaseDeployment>>> GetDatabaseDeploymentsByMetaId(int metaId)
         {
@@ -25,19 +25,13 @@ namespace Oganesyan_WebAPI.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPost("deploy/{databaseMetaId}")]
-        public async Task<IActionResult> DeployDatabase(int databaseMetaId, [FromBody] DatabaseDeployDto dto)
+        [HttpPost("attach/{databaseMetaId}")]
+        public async Task<IActionResult> AttachConnection(int databaseMetaId, [FromBody] DatabaseDeployDto dto)
         {
             try
             {
-                var deployment = await _databaseDeploymentService.DeployDatabaseAsync(databaseMetaId, dto);
-
-                return Ok(new
-                {
-                    deployment.Id,
-                    deployment.PhysicaDatabaseName,
-                    deployment.IsDeployed
-                });
+                var deployment = await _databaseDeploymentService.AttachConnectionAsync(databaseMetaId, dto);
+                return Ok(deployment);
             }
             catch (InvalidOperationException ex)
             {

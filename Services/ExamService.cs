@@ -129,6 +129,7 @@ namespace Oganesyan_WebAPI.Services
                     AvailablePlatforms = e.AvailableDeployments.Select(ad => new DeploymentInfoDto
                     {
                         Id = ad.DatabaseDeploymentId,
+                        ConnectionName = ad.DatabaseDeployment!.DbMeta!.Name,
                         DbType = ad.DatabaseDeployment!.DbMeta!.dbType,
                         Provider = ad.DatabaseDeployment.DbMeta.Provider ?? ""
                     }).ToList()
@@ -551,4 +552,5 @@ namespace Oganesyan_WebAPI.Services
         }
     }
 }
+
 

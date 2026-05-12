@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Oganesyan_WebAPI.DTOs;
-using Oganesyan_WebAPI.Models;
 using Oganesyan_WebAPI.Services;
 
 namespace Oganesyan_WebAPI.Controllers
@@ -21,21 +20,20 @@ namespace Oganesyan_WebAPI.Controllers
 
         [Authorize]
         [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<DatabaseMeta>>> GetAllDatabaseMetas()
+        public async Task<IActionResult> GetAllDatabaseMetas()
         {
-            return await _databaseMetaService.GetAllDatabaseMetasAsync();
+            var result = await _databaseMetaService.GetAllDatabaseMetasAsync();
+            return Ok(result);
         }
 
         [Authorize]
         [HttpGet("{id}")]
-        public async Task<ActionResult<IEnumerable<DatabaseMeta?>>> GetDatabaseMetaById(int id)
+        public async Task<IActionResult> GetDatabaseMetaById(int id)
         {
             var databaseMeta = await _databaseMetaService.GetDatabaseMetaByIdAsync(id);
-
             if (databaseMeta == null)
-            {
-                return NotFound(new { message = "Логическая БД не найдена" });
-            }
+                return NotFound(new { message = "База данных не найдена" });
+
             return Ok(databaseMeta);
         }
 
@@ -43,63 +41,59 @@ namespace Oganesyan_WebAPI.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddLogicalDatabase([FromForm] DatabaseMetaCreateDto dto, IFormFile? erdImage)
         {
-            string? erdImagePath = null;
-
-            if (erdImage != null)
+            try
             {
-                var uploadsDir = Path.Combine(_env.ContentRootPath, "uploads", "erd");
-                Directory.CreateDirectory(uploadsDir);
+                var erdImagePath = await SaveErdImageAsync(erdImage);
+                var databaseMeta = await _databaseMetaService.CreateLogicalDbAsync(dto, erdImagePath);
 
-                var fileName = $"{Guid.NewGuid()}" + $"{Path.GetExtension(erdImage.FileName)}";
-                var filePath = Path.Combine(uploadsDir, fileName);
-
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await erdImage.CopyToAsync(stream);
-
-                erdImagePath = $"/uploads/erd/{fileName}";
+                return Ok(new
+                {
+                    databaseMeta.Id,
+                    databaseMeta.LogicalName,
+                    databaseMeta.PhysicalName
+                });
             }
-
-            var databaseMeta = await _databaseMetaService.CreateLogicalDbAsync(dto, erdImagePath);
-
-            return Ok(new
+            catch (InvalidOperationException ex)
             {
-                databaseMeta.Id,
-                databaseMeta.LogicalName
-            });
+                return BadRequest(new { message = ex.Message });
+            }
         }
+
         [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLogicalDatabase(int id, [FromForm] DatabaseMetaUpdateDto dto, IFormFile? erdImage)
         {
-            string? newErdImagePath = null;
-
-            if (erdImage != null)
+            try
             {
-                var uploadsDir = Path.Combine(_env.ContentRootPath, "uploads", "erd");
-                Directory.CreateDirectory(uploadsDir);
+                var newErdImagePath = await SaveErdImageAsync(erdImage);
+                var updated = await _databaseMetaService.UpdateLogicalDbAsync(id, dto, newErdImagePath);
 
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(erdImage.FileName)}";
-                var filePath = Path.Combine(uploadsDir, fileName);
+                if (updated == null)
+                    return NotFound(new { message = "База данных не найдена" });
 
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await erdImage.CopyToAsync(stream);
-
-                newErdImagePath = $"/uploads/erd/{fileName}";
+                return Ok(updated);
             }
-
-            var updated = await _databaseMetaService.UpdateLogicalDbAsync(id, dto, newErdImagePath);
-
-            if (updated == null)
-                return NotFound(new { message = "Логическая БД не найдена" });
-
-            return Ok(new
+            catch (InvalidOperationException ex)
             {
-                updated.Id,
-                updated.LogicalName,
-                updated.Description,
-                updated.CreateScriptTemplate,
-                updated.ErdImagePath
-            });
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        private async Task<string?> SaveErdImageAsync(IFormFile? erdImage)
+        {
+            if (erdImage == null)
+                return null;
+
+            var uploadsDir = Path.Combine(_env.ContentRootPath, "uploads", "erd");
+            Directory.CreateDirectory(uploadsDir);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(erdImage.FileName)}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await erdImage.CopyToAsync(stream);
+
+            return $"/uploads/erd/{fileName}";
         }
     }
 }

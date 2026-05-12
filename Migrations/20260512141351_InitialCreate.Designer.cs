@@ -11,7 +11,7 @@ using Oganesyan_WebAPI.Data;
 namespace Oganesyan_WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260426094824_InitialCreate")]
+    [Migration("20260512141351_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -32,14 +32,7 @@ namespace Oganesyan_WebAPI.Migrations
                     b.Property<int>("DbMetaId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("DeployedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeployed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PhysicaDatabaseName")
-                        .IsRequired()
+                    b.Property<DateTime>("LinkedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -58,9 +51,6 @@ namespace Oganesyan_WebAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("CreateScriptTemplate")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -73,6 +63,12 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Property<string>("LogicalName")
                         .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhysicalName")
+                        .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -88,7 +84,15 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.Property<string>("ConnectionString")
                         .IsRequired()
-                        .HasMaxLength(500)
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Provider")
@@ -101,7 +105,7 @@ namespace Oganesyan_WebAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("dbType")
+                    b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("DbMetas");
@@ -354,13 +358,13 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
                         .WithMany("Deployments")
                         .HasForeignKey("DatabaseMetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Oganesyan_WebAPI.Models.DbMeta", "DbMeta")
                         .WithMany()
                         .HasForeignKey("DbMetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("DatabaseMeta");
@@ -373,7 +377,7 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
                         .WithMany()
                         .HasForeignKey("DatabaseMetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("DatabaseMeta");
@@ -384,13 +388,13 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.Exam", "Exam")
                         .WithMany()
                         .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "SelectedDeployment")
                         .WithMany()
                         .HasForeignKey("SelectedDeploymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Oganesyan_WebAPI.Models.User", "User")
@@ -417,7 +421,7 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ExamAttempt");
@@ -430,7 +434,7 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "DatabaseDeployment")
                         .WithMany()
                         .HasForeignKey("DatabaseDeploymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Oganesyan_WebAPI.Models.Exam", "Exam")
@@ -449,7 +453,7 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseMeta", "DatabaseMeta")
                         .WithMany()
                         .HasForeignKey("DatabaseMetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("DatabaseMeta");
@@ -460,17 +464,18 @@ namespace Oganesyan_WebAPI.Migrations
                     b.HasOne("Oganesyan_WebAPI.Models.DatabaseDeployment", "Deployment")
                         .WithMany()
                         .HasForeignKey("DeploymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Oganesyan_WebAPI.Models.Exam", "Exam")
                         .WithMany()
-                        .HasForeignKey("ExamId");
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Oganesyan_WebAPI.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Deployment");

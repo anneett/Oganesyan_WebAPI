@@ -14,9 +14,6 @@ namespace Oganesyan_WebAPI.Models
         public int DbMetaId { get; set; }
         public DbMeta? DbMeta { get; set; }
 
-        [Required]
-        public string PhysicaDatabaseName { get; set; } = string.Empty;
-        public bool IsDeployed { get; set; }
-        public DateTime DeployedAt { get; set; } 
+        public DateTime LinkedAt { get; set; } = DateTime.UtcNow;
     }
 }
