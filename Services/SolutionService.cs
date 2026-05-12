@@ -155,7 +155,8 @@ namespace Oganesyan_WebAPI.Services
                     UserAnswer = s.UserAnswer,
                     IsCorrect = s.IsCorrect,
                     SubmittedAt = s.SubmittedAt,
-                    Result = s.Result
+                    Result = s.Result,
+                    IsExam = s.ExamId.HasValue
                 })
                 .ToListAsync();
         }

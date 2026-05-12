@@ -20,5 +20,6 @@ namespace Oganesyan_WebAPI.DTOs
         public bool IsCorrect { get; set; }
         public DateTime SubmittedAt { get; set; }
         public string? Result { get; set; }
+        public bool IsExam { get; set; }
     }
 }
