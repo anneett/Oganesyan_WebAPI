@@ -550,6 +550,35 @@ namespace Oganesyan_WebAPI.Services
 
             return result;
         }
+
+        public async Task<List<ExamResponseDto>> GetAllExamsAsync()
+        {
+            return await _context.Exams
+                .Select(e => new ExamResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    DurationMinutes = e.DurationMinutes,
+                    DatabaseMetaId = e.DatabaseMetaId,
+                    MaxAttempts = e.MaxAttempts,
+                    IsActive = e.IsActive,
+                    IsResultsReleased = e.IsResultsReleased,
+                    LogicalDbName = e.DatabaseMeta!.LogicalName,
+                    EasyCount = e.EasyCount,
+                    MediumCount = e.MediumCount,
+                    HardCount = e.HardCount,
+                    TotalExercises = e.EasyCount + e.MediumCount + e.HardCount,
+                    AvailablePlatforms = e.AvailableDeployments.Select(ad => new DeploymentInfoDto
+                    {
+                        Id = ad.DatabaseDeploymentId,
+                        ConnectionName = ad.DatabaseDeployment!.DbMeta!.Name,
+                        DbType = ad.DatabaseDeployment!.DbMeta!.dbType,
+                        Provider = ad.DatabaseDeployment.DbMeta.Provider ?? ""
+                    }).ToList()
+                })
+                .ToListAsync();
+        }
     }
 }
 

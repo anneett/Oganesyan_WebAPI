@@ -39,6 +39,13 @@ namespace Oganesyan_WebAPI.Controllers
             return Ok(await _examService.GetActiveExamsAsync());
         }
 
+        [Authorize(Roles = "admin")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            return Ok(await _examService.GetAllExamsAsync());
+        }
+
         [Authorize]
         [HttpPost("start")]
         public async Task<IActionResult> Start(ExamStartDto dto)
