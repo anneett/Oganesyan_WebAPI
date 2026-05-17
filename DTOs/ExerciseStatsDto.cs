@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Oganesyan_WebAPI.Models;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography.Pkcs;
 
 namespace Oganesyan_WebAPI.DTOs
@@ -7,6 +8,7 @@ namespace Oganesyan_WebAPI.DTOs
     {
         public int ExerciseId { get; set; }
         public string ExerciseTitle { get; set; } = string.Empty;
+        public ExerciseDifficulty ExerciseDifficulty { get; set; }
         public int DatabaseMetaId { get; set; }
         public int TotalAttempts { get; set; }
         public int UniqueUsers { get; set; }

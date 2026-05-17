@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Oganesyan_WebAPI.Data;
 using Oganesyan_WebAPI.DTOs;
+using Oganesyan_WebAPI.Models;
 
 namespace Oganesyan_WebAPI.Services
 {
@@ -107,6 +108,7 @@ namespace Oganesyan_WebAPI.Services
                 {
                     ExerciseId = exerciseId,
                     ExerciseTitle = exercise.Title,
+                    ExerciseDifficulty = exercise.Difficulty,
                     DatabaseMetaId = exercise.DatabaseMetaId,
                     TotalAttempts = 0,
                     UniqueUsers = 0,
@@ -123,6 +125,7 @@ namespace Oganesyan_WebAPI.Services
             {
                 ExerciseId = exerciseId,
                 ExerciseTitle = exercise.Title,
+                ExerciseDifficulty = exercise.Difficulty,
                 DatabaseMetaId = exercise.DatabaseMetaId,
                 TotalAttempts = totalAttempts,
                 UniqueUsers = uniqueUsers,
@@ -174,6 +177,7 @@ namespace Oganesyan_WebAPI.Services
                 {
                     ExerciseId = e.Id,
                     ExerciseTitle = e.Title,
+                    ExerciseDifficulty = e.Difficulty,
                     DatabaseMetaId = e.DatabaseMetaId,
                     TotalAttempts = _context.Solutions.Count(s => s.ExerciseId == e.Id),
                     UniqueUsers = _context.Solutions.Where(s => s.ExerciseId == e.Id).Select(s => s.UserId).Distinct().Count(),
