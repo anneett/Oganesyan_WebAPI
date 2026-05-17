@@ -4,16 +4,16 @@ namespace Oganesyan_WebAPI.Models
 {
     public enum ExerciseDifficulty
     {
-        Easy,
-        Medium,
-        Hard
+        Easy = 1,
+        Medium = 2,
+        Hard = 3
     }
     public class Exercise
     {
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(200)]
+        [MaxLength(1000)]
         public string Title { get; set; } = string.Empty;
 
         [Required]

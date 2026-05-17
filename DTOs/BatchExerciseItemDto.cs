@@ -6,7 +6,7 @@ namespace Oganesyan_WebAPI.DTOs
     public class BatchExerciseItemDto
     {
         [Required]
-        [MaxLength(200)]
+        [MaxLength(1000)]
         public string Title { get; set; } = string.Empty;
 
         public ExerciseDifficulty? Difficulty { get; set; }

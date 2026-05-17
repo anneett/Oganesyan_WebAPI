@@ -23,6 +23,9 @@ namespace Oganesyan_WebAPI.Services
             if (await _context.Exercises.AnyAsync(e => e.Title == exerciseCreateDto.Title))
                 throw new InvalidOperationException("An exercise with this name already exists.");
 
+            if (!Enum.IsDefined(typeof(ExerciseDifficulty), exerciseCreateDto.Difficulty))
+                throw new InvalidOperationException("Недопустимая сложность.");
+
             var exercise = new Exercise
             {
                 Title = exerciseCreateDto.Title,
@@ -90,10 +93,26 @@ namespace Oganesyan_WebAPI.Services
                         continue;
                     }
 
+                    var difficulty = exercise.Difficulty ?? dto.DefaultDifficulty ?? ExerciseDifficulty.Medium;
+
+                    if (!Enum.IsDefined(typeof(ExerciseDifficulty), difficulty))
+                    {
+                        result.FailedCount++;
+
+                        result.Errors.Add(new BatchUploadErrorDto
+                        {
+                            LineNumber = i + 1,
+                            Title = exercise.Title,
+                            ErrorMessage = $"Недопустимая сложность: {(int)difficulty}. Разрешены только 1, 2, 3."
+                        });
+
+                        continue;
+                    }
+
                     var newExercise = new Exercise
                     {
                         Title = exercise.Title,
-                        Difficulty = exercise.Difficulty ?? dto.DefaultDifficulty ?? ExerciseDifficulty.Medium,
+                        Difficulty = difficulty,
                         DatabaseMetaId = dto.DatabaseMetaId,
                         CorrectAnswer = exercise.CorrectAnswer
                     };
