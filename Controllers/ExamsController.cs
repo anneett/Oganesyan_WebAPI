@@ -191,5 +191,16 @@ namespace Oganesyan_WebAPI.Controllers
 
             return Ok(exercises);
         }
+
+        [Authorize]
+        [HttpGet("active-attempt")]
+        public async Task<IActionResult> GetActiveAttempt()
+        {
+            var userId = _userService.GetUserId();
+
+            var attempt = await _examService.GetAnyActiveAttemptAsync(userId);
+
+            return Ok(attempt);
+        }
     }
 }

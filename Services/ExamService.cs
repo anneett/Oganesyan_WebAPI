@@ -579,6 +579,15 @@ namespace Oganesyan_WebAPI.Services
                 })
                 .ToListAsync();
         }
+
+        public async Task<ExamAttempt?> GetAnyActiveAttemptAsync(int userId)
+        {
+            return await _context.ExamAttempts
+                .Include(a => a.Exam)
+                .FirstOrDefaultAsync(a =>
+                    a.UserId == userId &&
+                    a.FinishedAt == null);
+        }
     }
 }
 

@@ -19,7 +19,6 @@ namespace Oganesyan_WebAPI.Models
         public int? ExamId { get; set; }
         public Exam? Exam { get; set; }
 
-        [Required]
         public string UserAnswer { get; set; } = string.Empty;
 
         [Required]

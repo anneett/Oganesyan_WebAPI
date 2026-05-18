@@ -24,8 +24,10 @@ namespace Oganesyan_WebAPI.Services
             if (exercise == null)
                 return null;
 
-            if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer))
+            if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer) && !solutionCreateDto.ExamId.HasValue)
+            {
                 throw new ArgumentException("Ответ не может быть пустым.");
+            }
 
             if (solutionCreateDto.ExamId.HasValue)
             {
@@ -43,12 +45,29 @@ namespace Oganesyan_WebAPI.Services
                     throw new InvalidOperationException("Используйте подключение, выбранное при начале экзамена");
             }
 
-            var result = await _queryExecutionService.CheckSolutionAsync(new ExecuteQueryDto
+            QueryResultDto result;
+            if (string.IsNullOrWhiteSpace(solutionCreateDto.UserAnswer))
             {
-                ExerciseId = solutionCreateDto.ExerciseId,
-                UserQuery = solutionCreateDto.UserAnswer,
-                DeploymentId = solutionCreateDto.DeploymentId
-            });
+                result = new QueryResultDto
+                {
+                    IsCorrect = false,
+                    Message = "Ответ не был предоставлен",
+                    UserRowCount = 0,
+                    UserColumnCount = 0,
+                    ColumnNames = new List<string>(),
+                    UserRows = new List<List<string>>(),
+                    ReferenceRows = new List<List<string>>()
+                };
+            }
+            else
+            {
+                result = await _queryExecutionService.CheckSolutionAsync(new ExecuteQueryDto
+                {
+                    ExerciseId = solutionCreateDto.ExerciseId,
+                    UserQuery = solutionCreateDto.UserAnswer,
+                    DeploymentId = solutionCreateDto.DeploymentId
+                });
+            }
 
             var solution = new Models.Solution
             {
@@ -56,7 +75,7 @@ namespace Oganesyan_WebAPI.Services
                 ExerciseId = solutionCreateDto.ExerciseId,
                 DeploymentId = solutionCreateDto.DeploymentId,
                 ExamId = solutionCreateDto.ExamId,
-                UserAnswer = solutionCreateDto.UserAnswer,
+                UserAnswer = solutionCreateDto.UserAnswer ?? string.Empty,
                 IsCorrect = result.IsCorrect,
                 SubmittedAt = DateTime.UtcNow,
                 Result = result.Message
