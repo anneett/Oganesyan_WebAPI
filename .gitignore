@@ -364,3 +364,8 @@ FodyWeavers.xsd
 
 # appsettings files
 appsettings.*.json
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
