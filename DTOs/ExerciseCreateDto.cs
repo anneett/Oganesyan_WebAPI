@@ -6,7 +6,7 @@ namespace Oganesyan_WebAPI.DTOs
     public class ExerciseCreateDto
     {
         [Required]
-        [MaxLength(200)]
+        [MaxLength(1000)]
         public string Title { get; set; } = string.Empty;
 
         [Required]
@@ -18,5 +18,8 @@ namespace Oganesyan_WebAPI.DTOs
 
         [Required]
         public string CorrectAnswer { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string? ReferenceDbType { get; set; }
     }
 }

@@ -13,5 +13,9 @@ namespace Oganesyan_WebAPI.DTOs
 
         [Required]
         public string CorrectAnswer { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string? ReferenceDbType { get; set; }
     }
 }
+

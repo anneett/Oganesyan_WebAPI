@@ -8,6 +8,7 @@ namespace Oganesyan_WebAPI.Models
         Medium = 2,
         Hard = 3
     }
+
     public class Exercise
     {
         public int Id { get; set; }
@@ -26,5 +27,8 @@ namespace Oganesyan_WebAPI.Models
 
         [Required]
         public string CorrectAnswer { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string? ReferenceDbType { get; set; }
     }
 }

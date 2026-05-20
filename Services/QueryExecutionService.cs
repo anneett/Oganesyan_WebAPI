@@ -4,6 +4,7 @@ using Oganesyan_WebAPI.DTOs;
 using Oganesyan_WebAPI.Models;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 
 namespace Oganesyan_WebAPI.Services
 {
@@ -39,8 +40,8 @@ namespace Oganesyan_WebAPI.Services
                 };
             }
 
-            var deployment = await GetDeploymentAsync(dto.DeploymentId);
-            if (deployment == null)
+            var userDeployment = await GetDeploymentAsync(dto.DeploymentId);
+            if (userDeployment == null)
             {
                 return new QueryResultDto
                 {
@@ -49,14 +50,29 @@ namespace Oganesyan_WebAPI.Services
                 };
             }
 
-            var connectionString = _databaseDeploymentService.BuildConnectionString(
-                deployment.DbMeta!,
-                deployment.DatabaseMeta!.PhysicalName);
+            var referenceDeployment = await ResolveReferenceDeploymentAsync(exercise, userDeployment);
+            if (referenceDeployment == null)
+            {
+                return new QueryResultDto
+                {
+                    IsCorrect = false,
+                    Message = exercise.ReferenceDbType == null
+                        ? "Не удалось подобрать подключение для эталонного ответа"
+                        : $"Для эталонного ответа требуется {exercise.ReferenceDbType}, но такое подключение сейчас недоступно для этой базы данных"
+                };
+            }
+
+            var userConnectionString = _databaseDeploymentService.BuildConnectionString(
+                userDeployment.DbMeta!,
+                userDeployment.DatabaseMeta!.PhysicalName);
+            var referenceConnectionString = _databaseDeploymentService.BuildConnectionString(
+                referenceDeployment.DbMeta!,
+                referenceDeployment.DatabaseMeta!.PhysicalName);
 
             try
             {
-                var userResult = await ExecuteQueryAsync(deployment.DbMeta!.Provider!, connectionString, dto.UserQuery);
-                var referenceResult = await ExecuteQueryAsync(deployment.DbMeta.Provider!, connectionString, exercise.CorrectAnswer);
+                var userResult = await ExecuteQueryAsync(userDeployment.DbMeta!.Provider!, userConnectionString, dto.UserQuery);
+                var referenceResult = await ExecuteQueryAsync(referenceDeployment.DbMeta!.Provider!, referenceConnectionString, exercise.CorrectAnswer);
                 var isCorrect = CompareDataTables(userResult, referenceResult);
 
                 return new QueryResultDto
@@ -127,6 +143,21 @@ namespace Oganesyan_WebAPI.Services
             }
         }
 
+        private async Task<DatabaseDeployment?> ResolveReferenceDeploymentAsync(Exercise exercise, DatabaseDeployment userDeployment)
+        {
+            if (string.IsNullOrWhiteSpace(exercise.ReferenceDbType) ||
+                string.Equals(exercise.ReferenceDbType, userDeployment.DbMeta?.dbType, StringComparison.OrdinalIgnoreCase))
+            {
+                return userDeployment;
+            }
+
+            return await _context.DatabaseDeployments
+                .Include(d => d.DbMeta)
+                .Include(d => d.DatabaseMeta)
+                .Where(d => d.DatabaseMetaId == exercise.DatabaseMetaId)
+                .FirstOrDefaultAsync(d => d.DbMeta != null && d.DbMeta.dbType == exercise.ReferenceDbType);
+        }
+
         private async Task<DatabaseDeployment?> GetDeploymentAsync(int deploymentId)
         {
             return await _context.DatabaseDeployments
@@ -157,15 +188,13 @@ namespace Oganesyan_WebAPI.Services
             if (dt1.Columns.Count != dt2.Columns.Count || dt1.Rows.Count != dt2.Rows.Count)
                 return false;
 
-            var sorted1 = dt1.AsEnumerable()
-                .Select(r => r.ItemArray.Select(v => v?.ToString() ?? "NULL").ToArray())
-                .OrderBy(r => string.Join("|", r))
-                .ToList();
+            var normalizedColumns1 = GetNormalizedColumnNames(dt1);
+            var normalizedColumns2 = GetNormalizedColumnNames(dt2);
+            if (!normalizedColumns1.SequenceEqual(normalizedColumns2))
+                return false;
 
-            var sorted2 = dt2.AsEnumerable()
-                .Select(r => r.ItemArray.Select(v => v?.ToString() ?? "NULL").ToArray())
-                .OrderBy(r => string.Join("|", r))
-                .ToList();
+            var sorted1 = GetNormalizedSortedRows(dt1);
+            var sorted2 = GetNormalizedSortedRows(dt2);
 
             for (var i = 0; i < sorted1.Count; i++)
             {
@@ -174,6 +203,60 @@ namespace Oganesyan_WebAPI.Services
             }
 
             return true;
+        }
+
+        private List<string[]> GetNormalizedSortedRows(DataTable table)
+        {
+            return table.AsEnumerable()
+                .Select(row => row.ItemArray.Select(NormalizeValueForComparison).ToArray())
+                .OrderBy(row => string.Join("|", row))
+                .ToList();
+        }
+
+        private List<string> GetNormalizedColumnNames(DataTable table)
+        {
+            return table.Columns
+                .Cast<DataColumn>()
+                .Select(column => column.ColumnName.Trim().ToLowerInvariant())
+                .ToList();
+        }
+
+        private string NormalizeValueForComparison(object? value)
+        {
+            if (value == null || value == DBNull.Value)
+                return "NULL";
+
+            if (value is bool boolValue)
+                return boolValue ? "true" : "false";
+
+            if (value is DateTime dateTime)
+            {
+                var normalized = dateTime.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
+                    : dateTime.ToUniversalTime();
+
+                return normalized.TimeOfDay == TimeSpan.Zero
+                    ? normalized.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                    : normalized.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+            }
+
+            if (value is DateOnly dateOnly)
+                return dateOnly.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            if (value is TimeOnly timeOnly)
+                return timeOnly.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+
+            if (value is IFormattable formattable)
+                return formattable.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty;
+
+            if (DateTime.TryParse(value.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var parsedDate))
+            {
+                return parsedDate.TimeOfDay == TimeSpan.Zero
+                    ? parsedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                    : parsedDate.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+            }
+
+            return value.ToString()?.Trim() ?? string.Empty;
         }
 
         public bool IsSafeSelectQuery(string query)
@@ -219,12 +302,116 @@ namespace Oganesyan_WebAPI.Services
         private string BuildMismatchMessage(DataTable user, DataTable reference)
         {
             if (user.Columns.Count != reference.Columns.Count)
-                return $"Количество столбцов не совпадает: у вас {user.Columns.Count}, ожидается {reference.Columns.Count}";
+                return $"Количество столбцов не совпадает: у вас {user.Columns.Count}, ожидается {reference.Columns.Count}.";
+
+            var normalizedUserColumns = GetNormalizedColumnNames(user);
+            var normalizedReferenceColumns = GetNormalizedColumnNames(reference);
+            if (!normalizedUserColumns.SequenceEqual(normalizedReferenceColumns))
+            {
+                var columnDifference = BuildColumnDifferenceMessage(user, reference, normalizedUserColumns, normalizedReferenceColumns);
+                return $"Имена или порядок столбцов не совпадают. {columnDifference}";
+            }
+
+            var sortedUser = GetNormalizedSortedRows(user);
+            var sortedReference = GetNormalizedSortedRows(reference);
 
             if (user.Rows.Count != reference.Rows.Count)
-                return $"Количество строк не совпадает: у вас {user.Rows.Count}, ожидается {reference.Rows.Count}";
+            {
+                var extraUserRows = sortedUser.Except(sortedReference, StringArrayComparer.Instance).ToList();
+                var missingUserRows = sortedReference.Except(sortedUser, StringArrayComparer.Instance).ToList();
 
-            return "Данные в строках не совпадают с ожидаемым результатом";
+                if (extraUserRows.Count > 0 && missingUserRows.Count > 0)
+                {
+                    return $"Количество строк не совпадает: у вас {user.Rows.Count}, ожидается {reference.Rows.Count}. Есть лишние строки, например: {FormatRowPreview(user, extraUserRows[0])}. И есть отсутствующие строки, например: {FormatRowPreview(reference, missingUserRows[0])}.";
+                }
+
+                if (extraUserRows.Count > 0)
+                {
+                    return $"Количество строк не совпадает: у вас {user.Rows.Count}, ожидается {reference.Rows.Count}. Есть лишняя строка, например: {FormatRowPreview(user, extraUserRows[0])}.";
+                }
+
+                if (missingUserRows.Count > 0)
+                {
+                    return $"Количество строк не совпадает: у вас {user.Rows.Count}, ожидается {reference.Rows.Count}. Не хватает строки, например: {FormatRowPreview(reference, missingUserRows[0])}.";
+                }
+
+                return $"Количество строк не совпадает: у вас {user.Rows.Count}, ожидается {reference.Rows.Count}.";
+            }
+
+            var originalColumnNames = user.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToList();
+
+            for (var rowIndex = 0; rowIndex < sortedUser.Count; rowIndex++)
+            {
+                for (var columnIndex = 0; columnIndex < sortedUser[rowIndex].Length; columnIndex++)
+                {
+                    if (sortedUser[rowIndex][columnIndex] == sortedReference[rowIndex][columnIndex])
+                        continue;
+
+                    var columnName = columnIndex < originalColumnNames.Count ? originalColumnNames[columnIndex] : $"#{columnIndex + 1}";
+                    return $"Данные не совпадают в строке {rowIndex + 1}, столбце '{columnName}': у вас '{sortedUser[rowIndex][columnIndex]}', ожидается '{sortedReference[rowIndex][columnIndex]}'.";
+                }
+            }
+
+            return "Результат запроса отличается от ожидаемого. Проверьте выбранные столбцы, условия и формат данных.";
+        }
+
+        private string BuildColumnDifferenceMessage(
+            DataTable user,
+            DataTable reference,
+            IReadOnlyList<string> normalizedUserColumns,
+            IReadOnlyList<string> normalizedReferenceColumns)
+        {
+            var minCount = Math.Min(normalizedUserColumns.Count, normalizedReferenceColumns.Count);
+            for (var columnIndex = 0; columnIndex < minCount; columnIndex++)
+            {
+                if (normalizedUserColumns[columnIndex] == normalizedReferenceColumns[columnIndex])
+                    continue;
+
+                var userColumnName = user.Columns[columnIndex].ColumnName;
+                var referenceColumnName = reference.Columns[columnIndex].ColumnName;
+                return $"На позиции {columnIndex + 1} у вас '{userColumnName}', ожидается '{referenceColumnName}'.";
+            }
+
+            return $"У вас: {string.Join(", ", user.Columns.Cast<DataColumn>().Select(c => c.ColumnName))}. Ожидается: {string.Join(", ", reference.Columns.Cast<DataColumn>().Select(c => c.ColumnName))}.";
+        }
+
+        private string FormatRowPreview(DataTable table, IReadOnlyList<string> normalizedRow)
+        {
+            var pairs = table.Columns.Cast<DataColumn>()
+                .Select((column, index) => $"{column.ColumnName}={normalizedRow[index]}");
+
+            return string.Join(", ", pairs);
+        }
+
+        private sealed class StringArrayComparer : IEqualityComparer<string[]>
+        {
+            public static StringArrayComparer Instance { get; } = new();
+
+            public bool Equals(string[]? x, string[]? y)
+            {
+                if (ReferenceEquals(x, y))
+                    return true;
+
+                if (x is null || y is null || x.Length != y.Length)
+                    return false;
+
+                for (var i = 0; i < x.Length; i++)
+                {
+                    if (!string.Equals(x[i], y[i], StringComparison.Ordinal))
+                        return false;
+                }
+
+                return true;
+            }
+
+            public int GetHashCode(string[] obj)
+            {
+                var hash = new HashCode();
+                foreach (var item in obj)
+                    hash.Add(item, StringComparer.Ordinal);
+
+                return hash.ToHashCode();
+            }
         }
 
         private List<string> GetColumnNames(DataTable dt)
@@ -235,8 +422,9 @@ namespace Oganesyan_WebAPI.Services
         private List<List<string>> DataTableToList(DataTable dt)
         {
             return dt.AsEnumerable()
-                .Select(row => row.ItemArray.Select(v => v?.ToString() ?? "NULL").ToList())
+                .Select(row => row.ItemArray.Select(value => value?.ToString() ?? "NULL").ToList())
                 .ToList();
         }
     }
 }
+

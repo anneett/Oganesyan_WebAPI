@@ -21,17 +21,17 @@ namespace Oganesyan_WebAPI.Services
         public async Task<Exercise> AddExercise(ExerciseCreateDto exerciseCreateDto)
         {
             if (await _context.Exercises.AnyAsync(e => e.Title == exerciseCreateDto.Title))
-                throw new InvalidOperationException("An exercise with this name already exists.");
-
-            if (!Enum.IsDefined(typeof(ExerciseDifficulty), exerciseCreateDto.Difficulty))
-                throw new InvalidOperationException("Недопустимая сложность.");
+                throw new InvalidOperationException("Задание с таким названием уже существует.");
 
             var exercise = new Exercise
             {
                 Title = exerciseCreateDto.Title,
                 Difficulty = exerciseCreateDto.Difficulty,
                 DatabaseMetaId = exerciseCreateDto.DatabaseMetaId,
-                CorrectAnswer = exerciseCreateDto.CorrectAnswer
+                CorrectAnswer = exerciseCreateDto.CorrectAnswer,
+                ReferenceDbType = string.IsNullOrWhiteSpace(exerciseCreateDto.ReferenceDbType)
+                    ? null
+                    : exerciseCreateDto.ReferenceDbType.Trim(),
             };
 
             _context.Exercises.Add(exercise);
@@ -93,28 +93,17 @@ namespace Oganesyan_WebAPI.Services
                         continue;
                     }
 
-                    var difficulty = exercise.Difficulty ?? dto.DefaultDifficulty ?? ExerciseDifficulty.Medium;
-
-                    if (!Enum.IsDefined(typeof(ExerciseDifficulty), difficulty))
-                    {
-                        result.FailedCount++;
-
-                        result.Errors.Add(new BatchUploadErrorDto
-                        {
-                            LineNumber = i + 1,
-                            Title = exercise.Title,
-                            ErrorMessage = $"Недопустимая сложность: {(int)difficulty}. Разрешены только 1, 2, 3."
-                        });
-
-                        continue;
-                    }
-
                     var newExercise = new Exercise
                     {
                         Title = exercise.Title,
-                        Difficulty = difficulty,
+                        Difficulty = exercise.Difficulty ?? dto.DefaultDifficulty ?? ExerciseDifficulty.Medium,
                         DatabaseMetaId = dto.DatabaseMetaId,
-                        CorrectAnswer = exercise.CorrectAnswer
+                        CorrectAnswer = exercise.CorrectAnswer,
+                        ReferenceDbType = string.IsNullOrWhiteSpace(exercise.ReferenceDbType)
+                            ? string.IsNullOrWhiteSpace(dto.ReferenceDbType)
+                                ? null
+                                : dto.ReferenceDbType.Trim()
+                            : exercise.ReferenceDbType.Trim()
                     };
 
                     _context.Exercises.Add(newExercise);
@@ -137,3 +126,4 @@ namespace Oganesyan_WebAPI.Services
         }
     }
 }
+

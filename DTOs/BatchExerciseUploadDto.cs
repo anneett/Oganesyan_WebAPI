@@ -10,7 +10,11 @@ namespace Oganesyan_WebAPI.DTOs
 
         public ExerciseDifficulty? DefaultDifficulty { get; set; } = ExerciseDifficulty.Medium;
 
+        [MaxLength(200)]
+        public string? ReferenceDbType { get; set; }
+
         [Required]
         public List<BatchExerciseItemDto> Exercises { get; set; } = new();
     }
 }
+

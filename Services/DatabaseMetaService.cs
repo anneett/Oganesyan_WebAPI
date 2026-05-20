@@ -52,7 +52,7 @@ namespace Oganesyan_WebAPI.Services
                 {
                     await _deploymentService.TestDatabaseAvailabilityAsync(connection, dto.PhysicalName);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw new InvalidOperationException($"На подключении '{connection.Name}' не найдена база данных '{dto.PhysicalName}'. Проверьте физическое имя.");
                 }
@@ -106,7 +106,7 @@ namespace Oganesyan_WebAPI.Services
                 {
                     await _deploymentService.TestDatabaseAvailabilityAsync(connection, dto.PhysicalName);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw new InvalidOperationException($"На подключении '{connection.Name}' не найдена база данных '{dto.PhysicalName}'. Проверьте физическое имя.");
                 }
